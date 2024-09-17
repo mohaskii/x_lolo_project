@@ -26,8 +26,9 @@ For now, you can only log in, save the session, and create a post. Other functio
 
 ```python 
 from x_lolo.session import Session
-new_session = Session()
-new_session.login("username", "password", save_session_to="session_data.yaml")
+new_session = Session(load_from="session_data.yaml")
 
-new_session.post_text("cr7 is the goat")
+post = new_session.add_post("here is a post")
+
+print(post.__dict__)
 ```
