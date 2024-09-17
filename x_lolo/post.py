@@ -1,4 +1,5 @@
 from datetime import date as Date, datetime
+from .user import User
 
 
 class Post:
@@ -36,8 +37,8 @@ class Post:
             :param linked_session: The session object associated with this post.
             """
         self.id: str | None = None
-        self.owner_username: str | None = None
-        self.owner_user_id: str | None = None
+        self.user_owner: str | User = None
+
         self.linked_session = linked_session
         self.creation_date: Date | None = None
         self.like: int | None = None
@@ -79,9 +80,12 @@ class Post:
             # Set the post content
             self.text_content = result["legacy"]["full_text"]
 
-            # Extract the author's username
-            result = result["core"]["user_results"]["result"]
-            self.owner_username = result["legacy"]["screen_name"]
+            # Extract the user_data
+            result = result["core"]["user_results"]
+            new_user = User()
+            new_user.load_by_json_result(result)
+            self.user_owner = new_user
+
         except Exception:
             # Raise an exception if there's a potential change in the API structure
             raise Exception(
