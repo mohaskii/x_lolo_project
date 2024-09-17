@@ -1,0 +1,50 @@
+POST https://api.x.com/1.1/onboarding/task.json HTTP/2.0
+user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0
+accept: */*
+accept-language: en-US,en;q=0.5
+accept-encoding: gzip, deflate, br, zstd
+content-type: application/json
+content-length: 624
+referer: https://x.com/
+x-guest-token: {{GUEST_TOKEN}}
+x-twitter-client-language: en
+x-twitter-active-user: yes
+x-client-transaction-id: {{TRANSACTION_ID}}
+origin: https://x.com
+sec-fetch-dest: empty
+sec-fetch-mode: cors
+sec-fetch-site: same-site
+authorization: Bearer {{BEARER_TOKEN}}
+cookie: guest_id_marketing={{GUEST_ID_MARKETING}}
+cookie: guest_id_ads={{GUEST_ID_ADS}}
+cookie: personalization_id="{{PERSONALIZATION_ID}}"
+cookie: night_mode={{NIGHT_MODE}}
+cookie: kdt={{KDT}}
+cookie: dnt=1
+cookie: att={{ATT_COOKIE}}
+cookie: guest_id={{GUEST_ID}}
+cookie: gt={{GT}}
+cookie: _twitter_sess={{TWITTER_SESSION}}
+te: trailers
+
+{
+    "flow_token": "{{SECOND_FLOW_TOKEN}}",
+    "subtask_inputs": [
+        {
+            "subtask_id": "LoginEnterUserIdentifierSSO",
+            "settings_list": {
+                "setting_responses": [
+                    {
+                        "key": "user_identifier",
+                        "response_data": {
+                            "text_data": {
+                                "result": "{{USERNAME}}"
+                            }
+                        }
+                    }
+                ],
+                "link": "next_link"
+            }
+        }
+    ]
+}
