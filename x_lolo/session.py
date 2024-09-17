@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, Any
 from .request_payload_and_headers import TEXT_POST_REQUEST_COMPONENTS
 import requests
+from .post import Post
 
 
 class Session:
@@ -38,7 +39,7 @@ class Session:
             "x_guest_token": session.x_guest_token,
             "flow_token": session.flow_token,
             "x_csrf_token": session.x_csrf_token,
-            "user_id": session.user_id 
+            "user_id": session.user_id
         }
 
         file_path = Path(filename)
@@ -63,12 +64,19 @@ class Session:
 
         return self
 
-    def post_text(self, text):
+    def add_post(self, text: str, media_url: str | None = None) -> Post:
+        # TODO: handle media upload
+
         response = requests.post(
             url=TEXT_POST_REQUEST_COMPONENTS["url"], headers=TEXT_POST_REQUEST_COMPONENTS["headers"](self), json=TEXT_POST_REQUEST_COMPONENTS["payload"](text))
-        if response.status_code!= 200:
+        if response.status_code != 200:
             raise Exception(
                 f"Error: {response.text}. Status code: {response.status_code}")
-        response = response.json()
-        if "errors" in response:
-            raise Exception(f"X_API_ERROR_MESSAGE: {response['errors']}")
+        response_json = response.json()
+        if "errors" in response_json:
+            print(f"X_API_ERROR_MESSAGE: {response_json['errors']}")
+            return None
+
+        new_post = Post(self)
+        new_post.load_by_creation_result(response_json)
+        return new_post
