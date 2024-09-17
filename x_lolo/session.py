@@ -69,4 +69,6 @@ class Session:
         if response.status_code!= 200:
             raise Exception(
                 f"Error: {response.text}. Status code: {response.status_code}")
-        print(response.text)
+        response = response.json()
+        if "errors" in response:
+            raise Exception(f"X_API_ERROR_MESSAGE: {response['errors']}")
