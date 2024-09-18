@@ -1,5 +1,7 @@
 from http.cookies import SimpleCookie
 from .cookie import Cookie
+import json
+
 
 # default user agent
 USERS_AGENT = "linux_Chrome"
@@ -292,8 +294,53 @@ def generate_payload_for_text_post(text: str):
             "responsive_web_enhance_cards_enabled": False
         },
     }
+
+
 TEXT_POST_REQUEST_COMPONENTS = {
     "url": "https://x.com/i/api/graphql/xT36w0XM3A8jDynpkram2A/CreateTweet",
     "headers": generate_valid_session_headers,
     "payload": generate_payload_for_text_post
+}
+
+
+def a(v):
+    return {
+        "variables": json.dumps({
+            "screen_name": v,
+            "withSafetyModeUserFields": True
+        }),
+        "features": json.dumps({
+            "hidden_profile_subscriptions_enabled": True,
+            "rweb_tipjar_consumption_enabled": True,
+            "responsive_web_graphql_exclude_directive_enabled": True,
+            "verified_phone_label_enabled": False,
+            "subscriptions_verification_info_is_identity_verified_enabled": True,
+            "subscriptions_verification_info_verified_since_enabled": True,
+            "highlights_tweets_tab_ui_enabled": True,
+            "responsive_web_twitter_article_notes_tab_enabled": True,
+            "subscriptions_feature_can_gift_premium": True,
+            "creator_subscriptions_tweet_preview_api_enabled": True,
+            "responsive_web_graphql_skip_user_profile_image_extensions_enabled": False,
+            "responsive_web_graphql_timeline_navigation_enabled": True
+        }),
+        "fieldToggles": json.dumps({
+            "withAuxiliaryUserLabels": False
+        })
+    }
+
+
+GRAPHQL_QUERIES = {
+    "base_url": " https://x.com/i/api/graphql/",
+    "get_user_by_username": {
+        "query_id": "Yka-W8dz7RaEuQNkroPkYw/UserByScreenName",
+        "query": a
+    },
+    "me": {
+        "query_id": "HC-1ZetsBT1HKVUOvnLE8Q/Viewer",
+        "query": {
+            "variables": '{"withCommunitiesMemberships":true}',
+            "features": '{"rweb_tipjar_consumption_enabled":true,"responsive_web_graphql_exclude_directive_enabled":true,"verified_phone_label_enabled":false,"creator_subscriptions_tweet_preview_api_enabled":true,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"responsive_web_graphql_timeline_navigation_enabled":true}',
+            "fieldToggles": '{"isDelegate":false,"withAuxiliaryUserLabels":false}'
+        }
+    }
 }
