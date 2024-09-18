@@ -8,7 +8,7 @@ from .request_payload_and_headers import TEXT_POST_REQUEST_COMPONENTS, GRAPHQL_Q
 import requests
 from .post import Post
 from .user import User
-from .url_graphquery import UrlGraphQuery
+
 
 
 class Session:
