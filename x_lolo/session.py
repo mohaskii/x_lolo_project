@@ -127,6 +127,16 @@ class Session:
         return new_post
 
     def get_user_by_username(self, username) -> User:
+        """
+        Fetches user data by username.
+
+        This method retrieves user information based on their Twitter/X username.
+        The response is then parsed to create and return a User object.
+
+        :param username: The Twitter/X username to fetch data for
+        :return: A User object containing the fetched user data
+        :raises Exception: If the API request fails or returns an unexpected status code
+    """
 
         query_objet = GRAPHQL_QUERIES["get_user_by_username"]
 
@@ -144,6 +154,15 @@ class Session:
         return user
 
     def me(self) -> User:
+        """
+    Fetches the current authenticated user's data .
+
+    This method retrieves information about the user who is currently authenticated in the session.
+    The response is then parsed to create and return a User object representing the current user.
+
+    :return: A User object containing the fetched data for the current authenticated user
+    :raises Exception: If the API request fails or returns an unexpected status code
+    """
         query_objet = GRAPHQL_QUERIES["me"]
         response = requests.get(
             url=f"{GRAPHQL_QUERIES['base_url']}{query_objet['query_id']}",
