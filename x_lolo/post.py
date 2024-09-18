@@ -1,6 +1,9 @@
 from datetime import date as Date, datetime
+from .user import User
+from dataclasses import dataclass
 
 
+@dataclass
 class Post:
     """
     Represents a post (tweet) on the X (formerly Twitter) platform.
@@ -25,26 +28,23 @@ class Post:
         __init__: Initializes a new Post object.
         load_by_creation_result: Loads post data from a creation result.
     """
+    id: str | None = None
+    user_owner: str | User = None
+    creation_date: Date | None = None
+    like: int | None = None
+    text_content: str | None = None
+    comment_count: int | None = None
+    view: int | None = None
+    repost: int | None = None
 
     def __init__(self, linked_session):
+        
         """
-            Initializes a new Post object.
-
-            This method sets up a new Post instance with default values for all attributes.
-            It also stores a reference to the linked session object.
+            Initializes a new Post object..
 
             :param linked_session: The session object associated with this post.
             """
-        self.id: str | None = None
-        self.owner_username: str | None = None
-        self.owner_user_id: str | None = None
         self.linked_session = linked_session
-        self.creation_date: Date | None = None
-        self.like: int | None = None
-        self.text_content: str | None = None
-        self.comment_count: int | None = None
-        self.view: int | None = None
-        self.repost: int | None = None
 
     def load_by_creation_result(self, result):
         """
@@ -79,9 +79,12 @@ class Post:
             # Set the post content
             self.text_content = result["legacy"]["full_text"]
 
-            # Extract the author's username
-            result = result["core"]["user_results"]["result"]
-            self.owner_username = result["legacy"]["screen_name"]
+            # Extract the user_data
+            result = result["core"]["user_results"]
+            new_user = User()
+            new_user.load_by_json_result(result)
+            self.user_owner = new_user
+
         except Exception:
             # Raise an exception if there's a potential change in the API structure
             raise Exception(
