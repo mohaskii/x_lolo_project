@@ -1,4 +1,5 @@
 from .utils import get_guest_ids as guest_ids
+from .utils.all import decode_response
 from .utils import auth_flows
 from .cookie import Cookie
 import yaml
@@ -8,7 +9,6 @@ from .request_payload_and_headers import TEXT_POST_REQUEST_COMPONENTS, GRAPHQL_Q
 import requests
 from .post import Post
 from .user import User
-
 
 
 class Session:
@@ -177,3 +177,29 @@ class Session:
             response.json()["data"]["viewer"]["user_results"])
 
         return user
+
+    def get_user_posts(self, user_name: str, count: int):
+        """
+        Fetches the most recent posts of a user.
+
+        This method retrieves the most recent posts of a specified user.
+        The response is then parsed to create and return a list of Post objects representing the user's posts.
+
+        :param user_name: The Twitter/X username of the user whose posts to fetch
+        :param count: The maximum number of posts to fetch 
+        :return: A list of Post objects containing the fetched data for the user's posts
+        :raises Exception: If the API request fails or returns an unexpected status code
+        """
+        user_id = self.get_user_by_username(user_name).id
+        query_objet = GRAPHQL_QUERIES["get_user_posts"]
+
+        response = requests.get(
+            url=f"{GRAPHQL_QUERIES['base_url']}{query_objet['query_id']}",
+            headers=generate_valid_session_headers(self),
+            params=query_objet["query"](user_id, count)
+        )
+        if response.status_code != 200:
+            raise Exception(
+                f"Error: {response.text}. Status code: {response.status_code}")
+        print(decode_response(response))
+        
