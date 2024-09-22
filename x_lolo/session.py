@@ -9,6 +9,7 @@ from .request_payload_and_headers import TEXT_POST_REQUEST_COMPONENTS, GRAPHQL_Q
 import requests
 from .post import Post
 from .user import User
+import json
 
 
 class Session:
@@ -201,5 +202,38 @@ class Session:
         if response.status_code != 200:
             raise Exception(
                 f"Error: {response.text}. Status code: {response.status_code}")
-        print(decode_response(response))
-        
+        data = json.loads(decode_response(response).decode('utf-8'))
+        with open("post_result.json", "w") as f:
+            f.write(decode_response(response).decode('utf-8'))
+        data = data["data"]["user"]["result"]["timeline_v2"]["timeline"]["instructions"]
+
+        for v in data:
+            if v["type"] == "TimelinePinEntry":
+                print('kiki')
+                r = v["entry"]["content"]["itemContent"]["tweet_results"]["result"]
+                new_post = Post(self)
+                new_post.load_by_result_json(r)
+                print(new_post)
+                continue
+            if v["type"] == "TimelineAddEntries":
+                data = v["entries"]
+                continue
+        for v in data:
+            entry_id: str = v["entryId"]
+
+            if entry_id.startswith("tweet") == False:
+                # TODO:
+                continue
+            r = v["content"]["itemContent"]["tweet_results"]["result"]
+            new_post = Post(self)
+            new_post.load_by_result_json(r)
+            print(new_post)
+
+    def __extract_post_from_instructions(self, instructions) -> Post:
+        pinned_post = None
+        all_posts_items = []
+
+        for v in instructions:
+            if v["type"] == "TimelinePinEntry":
+                pinned_post = v["entry"]["content"]["itemContent"]["tweet_results"]["result"]
+        print(len(data))

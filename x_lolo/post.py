@@ -1,6 +1,8 @@
 from datetime import date as Date, datetime
 from .user import User
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from .media import Media
+from typing import List
 
 
 @dataclass
@@ -36,9 +38,9 @@ class Post:
     comment_count: int | None = None
     view: int | None = None
     repost: int | None = None
+    medias = []
 
     def __init__(self, linked_session):
-        
         """
             Initializes a new Post object..
 
@@ -90,7 +92,33 @@ class Post:
             raise Exception(
                 "Potential change on the API. Hint: func:`load_by_creation_result`")
 
+    def load_by_result_json(self, result):
+        self.id = result["rest_id"]
+        user_owner = User()
+        user_owner.load_by_json_result(result["core"]["user_results"])
+        self.user_owner = user_owner
+        if result["views"].get("count"):
+            self.view = int(result["views"]["count"])
+        result = result["legacy"]
+        self.like = result["favorite_count"]
+        self.repost = result["retweet_count"]
+        self.comment_count = result["reply_count"]
+        self.creation_date = datetime.strptime(
+            result["created_at"], '%a %b %d %H:%M:%S %z %Y'
+        )
+        self.text_content = result["full_text"]
+        result = result["entities"]
+        if result.get("media") is None:
+            return
+        result = result["media"]
+        print('lolo')
+        for entity in result:
+            media = Media(self.linked_session)
+            media.load_from_json(entity)
+            self.medias.append(media)
+
     # Non-implemented methods (not included in the class comment)
+
     def like(self):
         # TODO
         return
