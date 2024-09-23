@@ -303,6 +303,7 @@ TEXT_POST_REQUEST_COMPONENTS = {
 }
 
 
+
 def a(v):
     return {
         "variables": json.dumps({
@@ -329,11 +330,12 @@ def a(v):
     }
 
 
-def b(user_id, count):
+def b(user_id, cursor =  None):
     return {
         "variables": json.dumps({
+            "count" : 30,
+            "cursor": cursor,
             "userId": user_id,
-            "count": count,
             "includePromotedContent": False,
             "withQuickPromoteEligibilityTweetFields": True,
             "withVoice": True,
@@ -387,7 +389,10 @@ GRAPHQL_QUERIES = {
     "get_user_posts": {
         "query_id": "E3opETHurmVJflFsUBVuUQ/UserTweets",
         "query": b,
-
+    },
+    "get_next_user_posts_paginator": {
+        "query_id": "E3opETHurmVJflFsUBVuUQ/UserTweets",
+        "query": b,
     }
 
 }
