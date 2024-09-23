@@ -1,4 +1,5 @@
 from .utils import get_guest_ids as guest_ids
+from .utils.all import decode_response
 from .utils import auth_flows
 from .cookie import Cookie
 import yaml
@@ -8,14 +9,15 @@ from .request_payload_and_headers import TEXT_POST_REQUEST_COMPONENTS, GRAPHQL_Q
 import requests
 from .post import Post
 from .user import User
-
+from .post_pagination import UserPostPaginator
+import json
 
 
 class Session:
     """
     Represents a user session for interacting with the X (formerly Twitter) API.
 
-    This class manages the state and operations necessary for authenticating and 
+    This class manages the state and operations necessary for authenticating and
     performing actions on behalf of a user.
     """
 
@@ -115,14 +117,14 @@ class Session:
             json=TEXT_POST_REQUEST_COMPONENTS["payload"](text)
         )
         if response.status_code != 200:
-            raise Exception(f"Error: {response.text}. Status code: {
-                            response.status_code}")
+            raise Exception(f"Error: {response.text}. Status code: {response.status_code}")
         response_json = response.json()
         if "errors" in response_json:
             print(f"X_API_ERROR_MESSAGE: {response_json['errors']}")
             return None
 
         new_post = Post(self)
+        print(new_post)
         new_post.load_by_creation_result(response_json)
         return new_post
 
@@ -177,3 +179,54 @@ class Session:
             response.json()["data"]["viewer"]["user_results"])
 
         return user
+
+    def get_user_posts(self, user_name: str, pagination_count: int = 1) -> list[Post] :
+        """
+        Fetches the most recent posts of a user.
+
+        This method retrieves the most recent posts of a specified user.
+        The response is then parsed to create and return a list of Post objects representing the user's posts.
+
+        :param user_name: The Twitter/X username of the user whose posts to fetch
+        :param pagination_count: The number of pages to fetch (default is 1)
+        :return: A list of Post objects containing the fetched data for the user's posts
+        :raises Exception: If the API request fails or returns an unexpected status code
+         """
+        data = self.get_user_post_pagination_json(user_name)
+
+        for v in data:
+            if v["type"] == "TimelinePinEntry":
+                r = v["entry"]["content"]["itemContent"]["tweet_results"]["result"]
+                new_post = Post(self)
+                new_post.load_by_result_json(r)
+                continue
+            if v["type"] == "TimelineAddEntries":
+                data = v["entries"]
+                continue
+        post_paginator = UserPostPaginator(self, data, user_name)    
+        r= []
+        r.extend(post_paginator.posts_state)
+
+        for _ in range(pagination_count-1):
+            post_paginator.next()
+            r.extend(post_paginator.posts_state)
+        return r            
+        
+        
+        
+        
+
+    def get_user_post_pagination_json(self, username: str, cursor: str | None = None) -> dict:
+        user_id = self.get_user_by_username(username).id
+        query_objet = GRAPHQL_QUERIES["get_user_posts"]
+
+        response = requests.get(
+            url=f"{GRAPHQL_QUERIES['base_url']}{query_objet['query_id']}",
+            headers=generate_valid_session_headers(self),
+            params=query_objet["query"](user_id, cursor)
+        )
+        if response.status_code != 200:
+            raise Exception(
+                f"Error: {response.text}. Status code: {response.status_code}")
+        data = json.loads(decode_response(response).decode('utf-8'))
+        return data["data"]["user"]["result"]["timeline_v2"]["timeline"]["instructions"]

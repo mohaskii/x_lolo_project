@@ -13,7 +13,6 @@ class User:
 
     Attributes:
         id (str | None): The unique identifier of the user.
-        rest_id (str | None): The REST API ID of the user.
         username (str | None): The username of the user.
         name (str | None): The full name of the user.
         profile_image_url (str | None): The URL of the user's profile image.
@@ -28,7 +27,6 @@ class User:
     """
 
     id: Optional[str] = None
-    rest_id: Optional[str] = None
     username: Optional[str] = None
     name: Optional[str] = None
     profile_image_url: Optional[str] = None

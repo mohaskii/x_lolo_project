@@ -303,6 +303,22 @@ TEXT_POST_REQUEST_COMPONENTS = {
 }
 
 
+def c(post_id):
+    return {
+        "queryId": "lI07N6Otwv1PhnEgXILM7A",
+        "variables": {
+            "tweet_id": f"{post_id}"
+        }
+    }
+
+
+LIKE_POST_REQUEST_COMPONENT = {
+    "url": "https://x.com/i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet",
+    "headers": generate_valid_session_headers,
+    "payload": c
+}
+
+
 def a(v):
     return {
         "variables": json.dumps({
@@ -329,6 +345,48 @@ def a(v):
     }
 
 
+def b(user_id, cursor=None):
+    return {
+        "variables": json.dumps({
+            "count": 30,
+            "cursor": cursor,
+            "userId": user_id,
+            "includePromotedContent": False,
+            "withQuickPromoteEligibilityTweetFields": True,
+            "withVoice": True,
+            "withV2Timeline": True
+        }),
+        "features": json.dumps({
+            "rweb_tipjar_consumption_enabled": True,
+            "responsive_web_graphql_exclude_directive_enabled": True,
+            "verified_phone_label_enabled": False,
+            "creator_subscriptions_tweet_preview_api_enabled": True,
+            "responsive_web_graphql_timeline_navigation_enabled": True,
+            "responsive_web_graphql_skip_user_profile_image_extensions_enabled": False,
+            "communities_web_enable_tweet_community_results_fetch": True,
+            "c9s_tweet_anatomy_moderator_badge_enabled": True,
+            "articles_preview_enabled": True,
+            "responsive_web_edit_tweet_api_enabled": True,
+            "graphql_is_translatable_rweb_tweet_is_translatable_enabled": True,
+            "view_counts_everywhere_api_enabled": True,
+            "longform_notetweets_consumption_enabled": True,
+            "responsive_web_twitter_article_tweet_consumption_enabled": True,
+            "tweet_awards_web_tipping_enabled": False,
+            "creator_subscriptions_quote_tweet_preview_enabled": False,
+            "freedom_of_speech_not_reach_fetch_enabled": True,
+            "standardized_nudges_misinfo": True,
+            "tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled": True,
+            "rweb_video_timestamps_enabled": True,
+            "longform_notetweets_rich_text_read_enabled": True,
+            "longform_notetweets_inline_media_enabled": True,
+            "responsive_web_enhance_cards_enabled": False
+        }),
+        "fieldToggles": json.dumps({
+            "withArticlePlainText": False
+        })
+    }
+
+
 GRAPHQL_QUERIES = {
     "base_url": " https://x.com/i/api/graphql/",
     "get_user_by_username": {
@@ -342,5 +400,14 @@ GRAPHQL_QUERIES = {
             "features": '{"rweb_tipjar_consumption_enabled":true,"responsive_web_graphql_exclude_directive_enabled":true,"verified_phone_label_enabled":false,"creator_subscriptions_tweet_preview_api_enabled":true,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"responsive_web_graphql_timeline_navigation_enabled":true}',
             "fieldToggles": '{"isDelegate":false,"withAuxiliaryUserLabels":false}'
         }
+    },
+    "get_user_posts": {
+        "query_id": "E3opETHurmVJflFsUBVuUQ/UserTweets",
+        "query": b,
+    },
+    "get_next_user_posts_paginator": {
+        "query_id": "E3opETHurmVJflFsUBVuUQ/UserTweets",
+        "query": b,
     }
+
 }
