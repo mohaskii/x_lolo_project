@@ -117,14 +117,14 @@ class Session:
             json=TEXT_POST_REQUEST_COMPONENTS["payload"](text)
         )
         if response.status_code != 200:
-            raise Exception(f"Error: {response.text}. Status code: {
-                            response.status_code}")
+            raise Exception(f"Error: {response.text}. Status code: {response.status_code}")
         response_json = response.json()
         if "errors" in response_json:
             print(f"X_API_ERROR_MESSAGE: {response_json['errors']}")
             return None
 
         new_post = Post(self)
+        print(new_post)
         new_post.load_by_creation_result(response_json)
         return new_post
 
@@ -180,7 +180,7 @@ class Session:
 
         return user
 
-    def get_user_posts(self, user_name: str, pagination_count: int = 1) -> Post :
+    def get_user_posts(self, user_name: str, pagination_count: int = 1) -> list[Post] :
         """
         Fetches the most recent posts of a user.
 

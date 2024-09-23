@@ -303,6 +303,21 @@ TEXT_POST_REQUEST_COMPONENTS = {
 }
 
 
+def c(post_id):
+    return {
+        "queryId": "lI07N6Otwv1PhnEgXILM7A",
+        "variables": {
+            "tweet_id": f"{post_id}"
+        }
+    }
+
+
+LIKE_POST_REQUEST_COMPONENT = {
+    "url": "https://x.com/i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet",
+    "headers": generate_valid_session_headers,
+    "payload": c
+}
+
 
 def a(v):
     return {
@@ -330,10 +345,10 @@ def a(v):
     }
 
 
-def b(user_id, cursor =  None):
+def b(user_id, cursor=None):
     return {
         "variables": json.dumps({
-            "count" : 30,
+            "count": 30,
             "cursor": cursor,
             "userId": user_id,
             "includePromotedContent": False,

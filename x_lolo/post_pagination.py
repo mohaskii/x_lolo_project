@@ -34,7 +34,7 @@ class UserPostPaginator:
             if entry_id.startswith("tweet") == False:
                 continue
             r = v["content"]["itemContent"]["tweet_results"]["result"]
-            new_post = Post(self)
+            new_post = Post(self.linked_session)
             new_post.load_by_result_json(r)
             self.posts_state.append(new_post)
         return
