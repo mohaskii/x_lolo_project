@@ -117,18 +117,19 @@ class Session:
             json=TEXT_POST_REQUEST_COMPONENTS["payload"](text)
         )
         if response.status_code != 200:
-            raise Exception(f"Error: {response.text}. Status code: {response.status_code}")
+            raise Exception(f"Error: {response.text}. Status code: {
+                            response.status_code}"
+                            )
         response_json = response.json()
         if "errors" in response_json:
             print(f"X_API_ERROR_MESSAGE: {response_json['errors']}")
             return None
 
         new_post = Post(self)
-        print(new_post)
         new_post.load_by_creation_result(response_json)
         return new_post
 
-    def get_user_by_username(self, username) -> User:
+    def     get_user_by_username(self, username) -> User:
         """
         Fetches user data by username.
 
@@ -151,7 +152,7 @@ class Session:
             raise Exception(
                 f"Error: {response.text}. Status code: {response.status_code}")
 
-        user = User()
+        user = User(self)
         user.load_by_json_result(response.json()["data"]["user"])
         return user
 
@@ -180,7 +181,7 @@ class Session:
 
         return user
 
-    def get_user_posts(self, user_name: str, pagination_count: int = 1) -> list[Post] :
+    def get_user_posts(self, user_name: str, pagination_count: int = 1) -> list[Post]:
         """
         Fetches the most recent posts of a user.
 
@@ -203,18 +204,14 @@ class Session:
             if v["type"] == "TimelineAddEntries":
                 data = v["entries"]
                 continue
-        post_paginator = UserPostPaginator(self, data, user_name)    
-        r= []
+        post_paginator = UserPostPaginator(self, data, user_name)
+        r = []
         r.extend(post_paginator.posts_state)
 
         for _ in range(pagination_count-1):
             post_paginator.next()
             r.extend(post_paginator.posts_state)
-        return r            
-        
-        
-        
-        
+        return r
 
     def get_user_post_pagination_json(self, username: str, cursor: str | None = None) -> dict:
         user_id = self.get_user_by_username(username).id
@@ -222,7 +219,7 @@ class Session:
 
         response = requests.get(
             url=f"{GRAPHQL_QUERIES['base_url']}{query_objet['query_id']}",
-            headers=generate_valid_session_headers(self),
+            headers=generate_valid_session_headers(self, "application/x-www-form-urlencoded"),
             params=query_objet["query"](user_id, cursor)
         )
         if response.status_code != 200:

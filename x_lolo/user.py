@@ -1,6 +1,9 @@
 from typing import Dict, Optional
 from datetime import datetime
 from dataclasses import dataclass
+import requests
+from .request_payload_and_headers import FOLLOW_REQUEST_COMPONENTS, UNFOLLOW_REQUEST_COMPONENTS
+
 
 @dataclass
 class User:
@@ -40,6 +43,9 @@ class User:
     is_verified: Optional[bool] = None
     # is_private: Optional[bool] = None
 
+    def __init__(self, linked_session):
+        self.linked_session = linked_session
+
     def load_by_json_result(self, result: Dict):
         """
         Loads user data from a JSON result.
@@ -57,7 +63,7 @@ class User:
             user_data = result["result"]
 
             # Set the user ID
-            
+
             self.id = user_data["rest_id"]
 
             # Set the username and name
@@ -96,6 +102,44 @@ class User:
             raise Exception(
                 "Potential change on the API. Hint: func:`load_by_json_result`"
             )
+
+    def follow(self):
+        """
+        Follows a user.
+
+        This method sends a POST request to the X API to follow a user.
+
+        :return: None
+        :raises Exception: If the request fails or returns an unexpected status code.
+        """
+        response = requests.post(
+            url=FOLLOW_REQUEST_COMPONENTS["url"],
+            headers=FOLLOW_REQUEST_COMPONENTS["headers"](self.linked_session),
+            data=FOLLOW_REQUEST_COMPONENTS["data"](self.id)
+        )
+        print(self.id)
+        if response.status_code != 200:
+            raise Exception(
+                f"Error: {response.text}. Status code: {response.status_code}")
+
+    def unfollow(self):
+        """
+        Unfollows a user.
+
+        This method sends a POST request to the X API to unfollow a user.
+
+        :return: None
+        :raises Exception: If the request fails or returns an unexpected status code.
+         """
+        response = requests.post(
+            url=UNFOLLOW_REQUEST_COMPONENTS["url"],
+            headers=UNFOLLOW_REQUEST_COMPONENTS["headers"](
+                self.linked_session),
+            data=UNFOLLOW_REQUEST_COMPONENTS["data"](self.id,)
+        )
+        if response.status_code != 200:
+            raise Exception(
+                f"Error: {response.text}. Status code: {response.status_code}")
 
     def __str__(self):
         return f"User @{self.username} (ID: {self.id}) - {self.name}"
