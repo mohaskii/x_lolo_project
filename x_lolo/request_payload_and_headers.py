@@ -241,7 +241,6 @@ def generate_valid_session_headers(sess) -> dict:
         "Accept": "*/*",
         "Accept-Language": "en-US,en;q=0.5",
         "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Content-Type": "application/json",
         "Referer": "https://x.com/home",
         "X-Twitter-Auth-Type": "OAuth2Session",
         "X-CSRF-Token": sess.x_csrf_token,
@@ -312,10 +311,38 @@ def c(post_id):
     }
 
 
+def d(user_id):
+    return {
+        "include_profile_interstitial_type": "1",
+        "include_blocking": "1",
+        "include_blocked_by": "1",
+        "include_followed_by": "1",
+        "include_want_retweets": "1",
+        "include_mute_edge": "1",
+        "include_can_dm": "1",
+        "include_can_media_tag": "1",
+        "include_ext_is_blue_verified": "1",
+        "include_ext_verified_type": "1",
+        "include_ext_profile_image_shape": "1",
+        "skip_status": "1",
+        "user_id": f"{user_id}"
+    }
+
+
 LIKE_POST_REQUEST_COMPONENT = {
     "url": "https://x.com/i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet",
     "headers": generate_valid_session_headers,
     "payload": c
+}
+FOLLOW_REQUEST_COMPONENTS = {
+    "url": "https://x.com/i/api/1.1/friendships/create.json",
+    "headers": generate_valid_session_headers,
+    "data": d
+}
+UNFOLLOW_REQUEST_COMPONENTS = {
+    "url": "https://x.com/i/api/1.1/friendships/destroy.json",
+    "headers": generate_valid_session_headers,
+    "data": d
 }
 
 

@@ -123,7 +123,7 @@ class Post:
 
     # Non-implemented methods (not included in the class comment)
 
-    def like(self):
+    def     like(self):
         response = requests.post(
             url=LIKE_POST_REQUEST_COMPONENT["url"],
             headers=LIKE_POST_REQUEST_COMPONENT["headers"](self.linked_session),
