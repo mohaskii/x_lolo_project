@@ -244,7 +244,7 @@ def generate_valid_session_headers(path_in_byte: bytes) -> dict:
             "User-Agent": USERS_AGENTS[USERS_AGENT],
             "Accept": "*/*",
             "Accept-Language": "en-US,en;q=0.5",
-            "x-client-transaction-id": base64.b64encode(path_in_byte).decode("utf-8"),
+            "x-client-transaction-id": f'e: {base64.b64encode(path_in_byte).decode("utf-8")} ',
             "Accept-Encoding": "gzip, deflate, br, zstd",
             "Referer": "https://x.com/home",
             "X-Twitter-Auth-Type": "OAuth2Session",
