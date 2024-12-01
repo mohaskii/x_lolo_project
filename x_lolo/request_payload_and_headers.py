@@ -1,16 +1,18 @@
 from http.cookies import SimpleCookie
 from .cookie import Cookie
 import json
+import base64
 
 
 # default user agent
-USERS_AGENT = "linux_Chrome"
+USERS_AGENT = "linux_Firefox"
 
 USERS_AGENTS = {
-    "linux_Firefox": "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",
+    "linux_Firefox": "Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0",
     "linux_Chrome": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     # Need some contributions for more users agents approved by Twitter
 }
+
 
 GET_TOK_REQUEST_COMPONENTS = {
     "headers": {
@@ -92,6 +94,7 @@ def generate_x_guest_flow_header(cookie: Cookie, guest_token: str) -> dict:
         "X-Guest-Token": guest_token,
         "X-Twitter-Client-Language": "en",
         "X-Twitter-Active-User": "yes",
+        "x-client-transaction-id": "ZToxLjEvb25ib2FyZGluZy90YXNrLmpzb24=",
         "Origin": "https://x.com",
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
@@ -169,7 +172,7 @@ def generate_payload_for_pnlr(flow_token: str):
             {
                 "js_instrumentation": {
                     "link": "next_link",
-                    "response": "{\"rf\":{\"a0d88821990b93ed8b88c8f2cec1f6a55523bb3cd3a2e129ff38e4a2aafcccdc\":-191,\"d44f82f7bef967329ae54476dba7b7666c7f50ae9601553cfb73cca45aef4e0f\":-150,\"f729d9835742998b799a599791853043fca0e8149a5f524cd0c602bcb85e1823\":-41,\"af92f7e5e499ec661c124ded9d5f2bbf1a16aec65dbc00ace19445e1cec4f4fb\":-46},\"s\":\"_MvpLYcsh1W_k0dKBFD9czEMmK2Q7HjnizH5MQ-k7bsNT56kdpL0z9S7yTRKcLZbguhVQ9Y7vuxMgrMpbQDN4UeYLXpbGQbtlpZGxrdMulSQbNVMCCuiBWSSkPppPUYZKCRyd9SE_FydBp3GjqoT87eGbynjpJvHjyup81NjkNmZwkxchT-Q6maE0mi-By_f__KIvin1FGLWDjnD-W56TU4GR_H2nxpZ2Kyjt849xyWTp-4id2H6tbU2K_R4fSv5-1l7xO9vmuvUwRf_IHzPU7tWP-bNvBkjkmC9DF1dXa1AwHO-eQiBQ5gsFegJRZpWuzjZA549NJZ3a-9r0mDBSgAAAZHzhFAV\"}"
+                    # "response": "{\"rf\":{\"aa12c0f88062b156b545f586c8d35c39fd4b29040e412f6bf073aacebf457ff4\":105,\"f26b5bab4ee5a35939628b55cb8045a576d641dd64ef3ba84e1ff71347e3902f\":109,\"a12617cdad3889a47b63721cea30d0d7d830f48ac62c2487ca1f3d36a2a7127d\":-116,\"f9ee9700668281f5e1d549b5a94d7855b4d212d032d6fe0e33f4fe8d8c0dfd08\":0},\"s\":\"aAvqFgaoPf5L9Vr2P8nkcbpzkkDoPCTVDcRL1U1JEd2aqtSDoLhZ4s_4437dBysUXg554wCIFe3nE1Z-NQMQ1zUTAUxNSqQMZRKMYOmtQ4x0cpFPA8HvlLAq1t5rxtwSxBnCzkdAUV36B2h7wSz3-8QVgQDcIzGZ5d_mJqxGIteHJRaYHw0UCbCTzkDULdwRKGSfManVeMx8NnOtm_Z3mQQD4FOwIYqhfdU0GioNl3oen4P1M0Agiz7S-Cei7rqTZHhZAy-dnrZwaSzHiAg6dXznVCifYZeKP8O77ADOqWiJOC236_K5SbtAvYHJIMr3FcD1uZ5N4QTNonLG-ngg5wAAAZNzW6Cy\"}"
                 },
                 "subtask_id": "LoginJsInstrumentationSubtask"
             }
@@ -235,25 +238,28 @@ SUBMIT_PASSWORD_REQUEST_COMPONENTS = {
 }
 
 
-def generate_valid_session_headers(sess) -> dict:
-    return {
-        "User-Agent": USERS_AGENTS[USERS_AGENT],
-        "Accept": "*/*",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Referer": "https://x.com/home",
-        "X-Twitter-Auth-Type": "OAuth2Session",
-        "X-CSRF-Token": sess.x_csrf_token,
-        "X-Twitter-Client-Language": "en",
-        "X-Twitter-Active-User": "yes",
-        "Origin": "https://x.com",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin",
-        "Authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
-        "Cookie": sess.cookies.encode(),
-        "TE": "trailers"
-    }
+def generate_valid_session_headers(path_in_byte: bytes) -> dict:
+    def _(sess):
+        return {
+            "User-Agent": USERS_AGENTS[USERS_AGENT],
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.5",
+            "x-client-transaction-id": base64.b64encode(path_in_byte).decode("utf-8"),
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Referer": "https://x.com/home",
+            "X-Twitter-Auth-Type": "OAuth2Session",
+            "X-CSRF-Token": sess.x_csrf_token,
+            "X-Twitter-Client-Language": "en",
+            "X-Twitter-Active-User": "yes",
+            "Origin": "https://x.com",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "Authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
+            "Cookie": sess.cookies.encode(),
+            "TE": "trailers"
+        }
+    return _
 
 
 def generate_payload_for_text_post(text: str):
@@ -297,7 +303,7 @@ def generate_payload_for_text_post(text: str):
 
 TEXT_POST_REQUEST_COMPONENTS = {
     "url": "https://x.com/i/api/graphql/xT36w0XM3A8jDynpkram2A/CreateTweet",
-    "headers": generate_valid_session_headers,
+    "headers": generate_valid_session_headers(b"i/api/graphql/xT36w0XM3A8jDynpkram2A/CreateTweet"),
     "payload": generate_payload_for_text_post
 }
 
@@ -331,17 +337,17 @@ def d(user_id):
 
 LIKE_POST_REQUEST_COMPONENT = {
     "url": "https://x.com/i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet",
-    "headers": generate_valid_session_headers,
+    "headers": generate_valid_session_headers(b"i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet"),
     "payload": c
 }
 FOLLOW_REQUEST_COMPONENTS = {
     "url": "https://x.com/i/api/1.1/friendships/create.json",
-    "headers": generate_valid_session_headers,
+    "headers": generate_valid_session_headers(b"i/api/1.1/friendships/create.json"),
     "data": d
 }
 UNFOLLOW_REQUEST_COMPONENTS = {
     "url": "https://x.com/i/api/1.1/friendships/destroy.json",
-    "headers": generate_valid_session_headers,
+    "headers": generate_valid_session_headers(b"api/1.1/friendships/destroy.json"),
     "data": d
 }
 

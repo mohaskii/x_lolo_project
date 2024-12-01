@@ -117,7 +117,6 @@ class User:
             headers=FOLLOW_REQUEST_COMPONENTS["headers"](self.linked_session),
             data=FOLLOW_REQUEST_COMPONENTS["data"](self.id)
         )
-        print(self.id)
         if response.status_code != 200:
             raise Exception(
                 f"Error: {response.text}. Status code: {response.status_code}")
@@ -141,5 +140,18 @@ class User:
             raise Exception(
                 f"Error: {response.text}. Status code: {response.status_code}")
 
-    def __str__(self):
-        return f"User @{self.username} (ID: {self.id}) - {self.name}"
+def __str__(self):
+    return f"""
+User Information:\n
+Name: {self.name}\n
+Username: @{self.username} (ID: {self.id})\n
+Profile Image URL: {self.profile_image_url}\n
+Bio: {self.bio}\n
+Location: {self.location}\n
+Website: {self.website}\n
+Created At: {self.created_at.strftime('%Y-%m-%d %H:%M:%S %Z')}\n
+Followers Count: {self.followers_count}\n
+Following Count: {self.following_count}\n
+Tweet Count: {self.tweet_count}\n
+Is Verified: {'Yes' if self.is_verified else 'No'}\n
+"""

@@ -33,7 +33,7 @@ class Post:
         load_by_creation_result: Loads post data from a creation result.
     """
     id: str | None = None
-    user_owner: str | User = None
+    user_owner: User = None
     creation_date: Date | None = None
     like_count: int | None = None
     text_content: str | None = None
@@ -85,7 +85,7 @@ class Post:
 
             # Extract the user_data
             result = result["core"]["user_results"]
-            new_user = User()
+            new_user = User(linked_session=self.linked_session)
             new_user.load_by_json_result(result)
             self.user_owner = new_user
 
@@ -98,7 +98,7 @@ class Post:
         if "limitedActionResults" in result:
             result = result["tweet"]
         self.id = result["rest_id"]
-        user_owner = User()
+        user_owner = User(linked_session=self.linked_session)
         user_owner.load_by_json_result(result["core"]["user_results"])
         self.user_owner = user_owner
         if result["views"].get("count"):
@@ -123,17 +123,16 @@ class Post:
 
     # Non-implemented methods (not included in the class comment)
 
-    def     like(self):
+    def like(self):
         response = requests.post(
             url=LIKE_POST_REQUEST_COMPONENT["url"],
-            headers=LIKE_POST_REQUEST_COMPONENT["headers"](self.linked_session),
+            headers=LIKE_POST_REQUEST_COMPONENT["headers"](
+                self.linked_session),
             json=LIKE_POST_REQUEST_COMPONENT["payload"](self.id)
         )
         if response.status_code != 200:
             raise Exception(
-                f"Error: {response.text}. Status code: {
-                    response.status_code}"
-            )
+                f"Error: {response.text}. Status code: {response.status_code}")
         return
 
     def unlike(self):

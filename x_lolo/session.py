@@ -117,19 +117,18 @@ class Session:
             json=TEXT_POST_REQUEST_COMPONENTS["payload"](text)
         )
         if response.status_code != 200:
-            raise Exception(f"Error: {response.text}. Status code: {
-                            response.status_code}"
-                            )
+            raise Exception(
+                f"Error: {response.text}. Status code: {response.status_code}")
         response_json = response.json()
         if "errors" in response_json:
             print(f"X_API_ERROR_MESSAGE: {response_json['errors']}")
             return None
-
+        print(response_json)
         new_post = Post(self)
         new_post.load_by_creation_result(response_json)
         return new_post
 
-    def     get_user_by_username(self, username) -> User:
+    def get_user_by_username(self, username) -> User:
         """
         Fetches user data by username.
 
@@ -145,15 +144,20 @@ class Session:
 
         response = requests.get(
             url=f"{GRAPHQL_QUERIES['base_url']}{query_objet['query_id']}",
-            headers=generate_valid_session_headers(self),
+            headers=generate_valid_session_headers(
+                GRAPHQL_QUERIES['base_url'].removeprefix("https://x.com/").encode("utf-8"))(self),
             params=query_objet["query"](username)
         )
         if response.status_code != 200:
             raise Exception(
                 f"Error: {response.text}. Status code: {response.status_code}")
+        response_json = response.json()
+        if "data" not in response_json:
+            raise Exception(
+                f"this user has no data")
 
         user = User(self)
-        user.load_by_json_result(response.json()["data"]["user"])
+        user.load_by_json_result(response_json["data"]["user"])
         return user
 
     def me(self) -> User:
@@ -169,7 +173,8 @@ class Session:
         query_objet = GRAPHQL_QUERIES["me"]
         response = requests.get(
             url=f"{GRAPHQL_QUERIES['base_url']}{query_objet['query_id']}",
-            headers=generate_valid_session_headers(self),
+            headers=generate_valid_session_headers(
+                GRAPHQL_QUERIES['base_url'].removeprefix("https://x.com/").encode("utf-8"))(self),
             params=query_objet["query"]
         )
         if response.status_code != 200:
@@ -219,11 +224,14 @@ class Session:
 
         response = requests.get(
             url=f"{GRAPHQL_QUERIES['base_url']}{query_objet['query_id']}",
-            headers=generate_valid_session_headers(self, "application/x-www-form-urlencoded"),
+            headers=generate_valid_session_headers(
+                GRAPHQL_QUERIES['base_url'].removeprefix("https://x.com/").encode("utf-8"))(self),
             params=query_objet["query"](user_id, cursor)
         )
         if response.status_code != 200:
             raise Exception(
                 f"Error: {response.text}. Status code: {response.status_code}")
         data = json.loads(decode_response(response).decode('utf-8'))
+        
+
         return data["data"]["user"]["result"]["timeline_v2"]["timeline"]["instructions"]

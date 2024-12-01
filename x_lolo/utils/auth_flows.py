@@ -40,6 +40,7 @@ def pass_next_link(sess):
     if response.status_code != 200:
         raise Exception(
             f"Error: {response.text}. Status code: {response.status_code}")
+    response_json = response.json()
 
 
 def cookie_to_dict(cookie_string):
