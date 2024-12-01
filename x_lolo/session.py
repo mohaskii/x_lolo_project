@@ -123,7 +123,6 @@ class Session:
         if "errors" in response_json:
             print(f"X_API_ERROR_MESSAGE: {response_json['errors']}")
             return None
-        print(response_json)
         new_post = Post(self)
         new_post.load_by_creation_result(response_json)
         return new_post
