@@ -179,7 +179,7 @@ class Session:
         if response.status_code != 200:
             raise Exception(
                 f"Error: {response.text}. Status code: {response.status_code}")
-        user = User()
+        user = User(self)
         user.load_by_json_result(
             response.json()["data"]["viewer"]["user_results"])
 
