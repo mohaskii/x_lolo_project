@@ -2,7 +2,10 @@ from typing import Dict, Optional
 from datetime import datetime
 from dataclasses import dataclass
 import requests
-from .request_payload_and_headers import FOLLOW_REQUEST_COMPONENTS, UNFOLLOW_REQUEST_COMPONENTS
+from .request_payload_and_headers import (
+    FOLLOW_REQUEST_COMPONENTS,
+    UNFOLLOW_REQUEST_COMPONENTS,
+)
 
 
 @dataclass
@@ -81,7 +84,7 @@ class User:
 
             # Parse and set the creation date
             self.created_at = datetime.strptime(
-                user_data["legacy"]["created_at"], '%a %b %d %H:%M:%S %z %Y'
+                user_data["legacy"]["created_at"], "%a %b %d %H:%M:%S %z %Y"
             )
 
             # Set follower and following counts
@@ -103,6 +106,51 @@ class User:
                 "Potential change on the API. Hint: func:`load_by_json_result`"
             )
 
+    def load_by_json_user(self, json_user: Dict):
+        try:
+            # Extract the user result from the API response
+
+            # Set the user ID
+
+            self.id = json_user["id"]
+
+            # Set the username and name
+            self.username = json_user["screen_name"]
+            self.name = json_user["name"]
+
+            # Set the profile image URL
+            self.profile_image_url = json_user["profile_image_url_https"]
+
+            # Set the bio
+            self.bio = json_user["description"]
+
+            # Set the location
+            self.location = json_user["location"]
+
+            # Parse and set the creation date
+            self.created_at = datetime.strptime(
+                json_user["created_at"], "%a %b %d %H:%M:%S %z %Y"
+            )
+
+            # Set follower and following counts
+            self.followers_count = json_user["followers_count"]
+            self.following_count = json_user["friends_count"]
+
+            # Set tweet count
+            self.tweet_count = json_user["statuses_count"]
+
+            # Set verification status
+            self.is_verified = json_user["verified"]
+
+            # Set private account status
+            # self.is_private = json_user["protected"]
+
+        except Exception:
+            # Raise an exception if there's a potential change in the API structure
+            raise Exception(
+                "Potential change on the API. Hint: func:`load_by_json_result`"
+            )
+
     def follow(self):
         """
         Follows a user.
@@ -115,11 +163,12 @@ class User:
         response = requests.post(
             url=FOLLOW_REQUEST_COMPONENTS["url"],
             headers=FOLLOW_REQUEST_COMPONENTS["headers"](self.linked_session),
-            data=FOLLOW_REQUEST_COMPONENTS["data"](self.id)
+            data=FOLLOW_REQUEST_COMPONENTS["data"](self.id),
         )
         if response.status_code != 200:
             raise Exception(
-                f"Error: {response.text}. Status code: {response.status_code}")
+                f"Error: {response.text}. Status code: {response.status_code}"
+            )
 
     def unfollow(self):
         """
@@ -129,16 +178,19 @@ class User:
 
         :return: None
         :raises Exception: If the request fails or returns an unexpected status code.
-         """
+        """
         response = requests.post(
             url=UNFOLLOW_REQUEST_COMPONENTS["url"],
-            headers=UNFOLLOW_REQUEST_COMPONENTS["headers"](
-                self.linked_session),
-            data=UNFOLLOW_REQUEST_COMPONENTS["data"](self.id,)
+            headers=UNFOLLOW_REQUEST_COMPONENTS["headers"](self.linked_session),
+            data=UNFOLLOW_REQUEST_COMPONENTS["data"](
+                self.id,
+            ),
         )
         if response.status_code != 200:
             raise Exception(
-                f"Error: {response.text}. Status code: {response.status_code}")
+                f"Error: {response.text}. Status code: {response.status_code}"
+            )
+
 
 def __str__(self):
     return f"""

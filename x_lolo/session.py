@@ -5,11 +5,18 @@ from .cookie import Cookie
 import yaml
 from pathlib import Path
 from typing import Dict, Any
-from .request_payload_and_headers import TEXT_POST_REQUEST_COMPONENTS, GRAPHQL_QUERIES, generate_valid_session_headers
+from .request_payload_and_headers import (
+    TEXT_POST_REQUEST_COMPONENTS,
+    GRAPHQL_QUERIES,
+    generate_valid_session_headers,
+    RECOMMENDATIONS_REQUEST_COMPONENT,
+    FOLLOWERS_REQUEST_COMPONENT,
+)
 import requests
 from .post import Post
 from .user import User
 from .post_pagination import UserPostPaginator
+from .followers_list_pagination import FollowerPaginator
 import json
 
 
@@ -44,8 +51,7 @@ class Session:
         :param password: The password
         :param save_session_to: Path to save the session to (optional)
         """
-        flow_token, att_cookie = auth_flows.get(
-            self.cookies, self.x_guest_token)
+        flow_token, att_cookie = auth_flows.get(self.cookies, self.x_guest_token)
         self.flow_token = flow_token
         self.cookies.dict["att"] = att_cookie
         self.user_id = ""
@@ -59,7 +65,9 @@ class Session:
         if save_session_to:
             self.__save_to_yaml(self, save_session_to)
 
-    def __save_to_yaml(cls, session: 'Session', filename: str = "session_data.yaml") -> None:
+    def __save_to_yaml(
+        cls, session: "Session", filename: str = "session_data.yaml"
+    ) -> None:
         """
         Saves the session data to a YAML file.
 
@@ -71,7 +79,7 @@ class Session:
             "x_guest_token": session.x_guest_token,
             "flow_token": session.flow_token,
             "x_csrf_token": session.x_csrf_token,
-            "user_id": session.user_id
+            "user_id": session.user_id,
         }
 
         file_path = Path(filename)
@@ -80,7 +88,7 @@ class Session:
 
         print(f"Session data saved to {file_path}")
 
-    def __load_from_yaml(self, filename: str = "session_data.yaml") -> 'Session':
+    def __load_from_yaml(self, filename: str = "session_data.yaml") -> "Session":
         """
         Loads session data from a YAML file.
 
@@ -114,11 +122,12 @@ class Session:
         response = requests.post(
             url=TEXT_POST_REQUEST_COMPONENTS["url"],
             headers=TEXT_POST_REQUEST_COMPONENTS["headers"](self),
-            json=TEXT_POST_REQUEST_COMPONENTS["payload"](text)
+            json=TEXT_POST_REQUEST_COMPONENTS["payload"](text),
         )
         if response.status_code != 200:
             raise Exception(
-                f"Error: {response.text}. Status code: {response.status_code}")
+                f"Error: {response.text}. Status code: {response.status_code}"
+            )
         response_json = response.json()
         if "errors" in response_json:
             print(f"X_API_ERROR_MESSAGE: {response_json['errors']}")
@@ -137,23 +146,26 @@ class Session:
         :param username: The Twitter/X username to fetch data for
         :return: A User object containing the fetched user data
         :raises Exception: If the API request fails or returns an unexpected status code
-    """
+        """
 
         query_objet = GRAPHQL_QUERIES["get_user_by_username"]
 
         response = requests.get(
             url=f"{GRAPHQL_QUERIES['base_url']}{query_objet['query_id']}",
             headers=generate_valid_session_headers(
-                GRAPHQL_QUERIES['base_url'].removeprefix("https://x.com/").encode("utf-8"))(self),
-            params=query_objet["query"](username)
+                GRAPHQL_QUERIES["base_url"]
+                .removeprefix("https://x.com/")
+                .encode("utf-8")
+            )(self),
+            params=query_objet["query"](username),
         )
         if response.status_code != 200:
             raise Exception(
-                f"Error: {response.text}. Status code: {response.status_code}")
+                f"Error: {response.text}. Status code: {response.status_code}"
+            )
         response_json = response.json()
         if "data" not in response_json:
-            raise Exception(
-                f"this user has no data")
+            raise Exception(f"this user has no data")
 
         user = User(self)
         user.load_by_json_result(response_json["data"]["user"])
@@ -161,27 +173,30 @@ class Session:
 
     def me(self) -> User:
         """
-    Fetches the current authenticated user's data .
+        Fetches the current authenticated user's data .
 
-    This method retrieves information about the user who is currently authenticated in the session.
-    The response is then parsed to create and return a User object representing the current user.
+        This method retrieves information about the user who is currently authenticated in the session.
+        The response is then parsed to create and return a User object representing the current user.
 
-    :return: A User object containing the fetched data for the current authenticated user
-    :raises Exception: If the API request fails or returns an unexpected status code
-    """
+        :return: A User object containing the fetched data for the current authenticated user
+        :raises Exception: If the API request fails or returns an unexpected status code
+        """
         query_objet = GRAPHQL_QUERIES["me"]
         response = requests.get(
             url=f"{GRAPHQL_QUERIES['base_url']}{query_objet['query_id']}",
             headers=generate_valid_session_headers(
-                GRAPHQL_QUERIES['base_url'].removeprefix("https://x.com/").encode("utf-8"))(self),
-            params=query_objet["query"]
+                GRAPHQL_QUERIES["base_url"]
+                .removeprefix("https://x.com/")
+                .encode("utf-8")
+            )(self),
+            params=query_objet["query"],
         )
         if response.status_code != 200:
             raise Exception(
-                f"Error: {response.text}. Status code: {response.status_code}")
+                f"Error: {response.text}. Status code: {response.status_code}"
+            )
         user = User(self)
-        user.load_by_json_result(
-            response.json()["data"]["viewer"]["user_results"])
+        user.load_by_json_result(response.json()["data"]["viewer"]["user_results"])
 
         return user
 
@@ -196,7 +211,7 @@ class Session:
         :param pagination_count: The number of pages to fetch (default is 1)
         :return: A list of Post objects containing the fetched data for the user's posts
         :raises Exception: If the API request fails or returns an unexpected status code
-         """
+        """
         data = self.get_user_post_pagination_json(user_name)
 
         for v in data:
@@ -212,25 +227,108 @@ class Session:
         r = []
         r.extend(post_paginator.posts_state)
 
-        for _ in range(pagination_count-1):
+        for _ in range(pagination_count - 1):
             post_paginator.next()
             r.extend(post_paginator.posts_state)
         return r
 
-    def get_user_post_pagination_json(self, username: str, cursor: str | None = None) -> dict:
+    def get_user_post_pagination_json(
+        self, username: str, cursor: str | None = None
+    ) -> dict:
         user_id = self.get_user_by_username(username).id
         query_objet = GRAPHQL_QUERIES["get_user_posts"]
 
         response = requests.get(
             url=f"{GRAPHQL_QUERIES['base_url']}{query_objet['query_id']}",
             headers=generate_valid_session_headers(
-                GRAPHQL_QUERIES['base_url'].removeprefix("https://x.com/").encode("utf-8"))(self),
-            params=query_objet["query"](user_id, cursor)
+                GRAPHQL_QUERIES["base_url"]
+                .removeprefix("https://x.com/")
+                .encode("utf-8")
+            )(self),
+            params=query_objet["query"](user_id, cursor),
         )
         if response.status_code != 200:
             raise Exception(
-                f"Error: {response.text}. Status code: {response.status_code}")
-        data = json.loads(decode_response(response).decode('utf-8'))
-        
+                f"Error: {response.text}. Status code: {response.status_code}"
+            )
+        data = json.loads(decode_response(response).decode("utf-8"))
 
         return data["data"]["user"]["result"]["timeline_v2"]["timeline"]["instructions"]
+
+    def get_recommended_users_by_username(self, username: str, limit=10) -> list[User]:
+        """
+        Fetch recommended users by username.
+
+        This method retrieves a list of recommended users for a specified user.
+        The response is then parsed to create and return a list of User objects representing the recommended users.
+
+        :param username: The Twitter/X username of the user whose recommended users to fetch
+        :param limit: The maximum number of recommended users to fetch (default is 10)
+        :return: A list of User objects containing the fetched data for the recommended users
+        :raises Exception: If the API request fails or returns an unexpected status code
+        """
+        user_id = self.get_user_by_username(username).id
+        response = requests.get(
+            url=RECOMMENDATIONS_REQUEST_COMPONENT["url"],
+            headers=RECOMMENDATIONS_REQUEST_COMPONENT["headers"](self),
+            params=RECOMMENDATIONS_REQUEST_COMPONENT["params"](user_id, limit),
+        )
+        if response.status_code != 200:
+            raise Exception(
+                f"Error: {response.text}. Status code: {response.status_code}"
+            )
+        data = json.loads(decode_response(response).decode("utf-8"))
+        recommended_users = []
+        for user_data in data:
+            new_user = User(self)
+            new_user.load_by_json_user(user_data["user"])
+            recommended_users.append(new_user)
+        return recommended_users
+
+    def get_user_followers(self, username: str, pagination_count=1) -> list[User]:
+        """
+        Fetch followers of a user.
+
+        This method retrieves a list of followers for a specified user.
+        The response is then parsed to create and return a list of User objects representing the followers.
+
+        :param username: The Twitter/X username of the user whose followers to fetch
+        :return: A list of User objects containing the fetched data for the followers
+        :raises Exception: If the API request fails or returns an unexpected status code
+        """
+
+        response = self.get_user_follower_pagination_json(username)
+
+        for v in response:
+            if v["type"] == "TimelineAddEntries":
+                response = v["entries"]
+                break
+        result: list[User] = []
+        follower_paginator = FollowerPaginator(self, response, username)
+        while pagination_count:
+
+            result.extend(follower_paginator.followers)
+            pagination_count -= 1
+            if pagination_count:
+                follower_paginator.next()
+
+        return result
+
+    def get_user_follower_pagination_json(
+        self, username: str, cursor: str | None = None
+    ) -> dict:
+        user_id = self.get_user_by_username(username).id
+        response = requests.get(
+            url=FOLLOWERS_REQUEST_COMPONENT["url"],
+            headers=FOLLOWERS_REQUEST_COMPONENT["headers"](self),
+            params=FOLLOWERS_REQUEST_COMPONENT["params"](user_id, cursor),
+        )
+        if response.status_code != 200:
+            raise Exception(
+                f"Error: {response.text}. Status code: {response.status_code}"
+            )
+        response = json.loads(decode_response(response).decode("utf-8"))
+
+        return response["data"]["user"]["result"]["timeline"]["timeline"][
+            "instructions"
+        ]
