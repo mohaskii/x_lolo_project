@@ -1,3 +1,4 @@
+[![PyPI Downloads](https://static.pepy.tech/badge/x-lolo)](https://pepy.tech/projects/x-lolo)
 # x_lolo
 
 x_lolo is a Python library that allows direct use of Twitter's (formerly X) unofficial API without intermediaries, enhancing security.
