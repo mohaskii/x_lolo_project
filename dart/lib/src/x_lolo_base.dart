@@ -11,8 +11,8 @@ class Cookie {
 }
 
 class Session {
-  late final Cookie cookie;
-  late final String guestToken;
+  final Cookie cookie;
+  final String guestToken;
   Session(this.guestToken, this.cookie);
 
   // Session.fromYaml(dynamic data) {
@@ -31,7 +31,7 @@ Future<Cookie?> getGuestID() async {
       return null;
     }
     // Extract cookies from response headers
-    String? cookies = response.headers['set-cookie'];
+    final String? cookies = response.headers['set-cookie'];
     if (cookies == null || cookies.isEmpty) {
       print("No cookies found in response");
       return null;
@@ -72,16 +72,16 @@ void main() {
 
 Map<String, String> extractCookiesTrim(String cookieString) {
   // Parse the cookie string
-  Map<String, String> cookiesToReturn = {};
+  final Map<String, String> cookiesToReturn = {};
 
   // Split the cookie string by semicolons
-  List<String> parts = cookieString.split('; ');
+  final List<String> parts = cookieString.split('; ');
 
   for (String part in parts) {
     // Split each part by '='
-    int equalsIndex = part.indexOf('=');
+    final int equalsIndex = part.indexOf('=');
     if (equalsIndex > 0) {
-      String key = part.substring(0, equalsIndex);
+      final String key = part.substring(0, equalsIndex);
       String value = part.substring(equalsIndex + 1);
 
       // Similar to the Python lstrip("v1%3A")
