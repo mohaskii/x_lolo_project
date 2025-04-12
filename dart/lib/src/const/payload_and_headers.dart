@@ -33,9 +33,9 @@ final GET_TOK_REQUEST_COMPONENTS = {
   "url": "https://x.com/",
 };
 
-String g(String tok) {
-  return "https://twitter.com/x/migrate?tok=$tok";
-}
+// String g(String tok) {
+//   return "https://twitter.com/x/migrate?tok=$tok";
+// }
 
 final GET_IDS_COOKIES_REQUEST_COMPONENTS = {
   "headers": {
@@ -54,7 +54,9 @@ final GET_IDS_COOKIES_REQUEST_COMPONENTS = {
     "Priority": "u=0,i",
     "Te": "trailers",
   },
-  "url": g, // This is a function reference in the original Python code
+  "url":
+      (String tok) =>
+          "https://twitter.com/x/migrate?tok=$tok", // This is a function reference in the original Python code
 };
 
 Map<String, String> generateXGuestTokenHeader(Cookie cookies) {
@@ -112,7 +114,7 @@ final GET_FLOW_TOKEN_REQUEST_COMPONENTS = {
       "flow_context": {
         "debug_overrides": {},
         "start_location": {"location": "splash_screen"},
-      }
+      },
     },
     // to be honest idk tf is going on here
     "subtask_versions": {
@@ -173,7 +175,7 @@ Map<String, dynamic> generatePayloadForPnlr(String flowToken) {
           // "response": "{\"rf\":{\"aa12c0f88062b156b545f586c8d35c39fd4b29040e412f6bf073aacebf457ff4\":105,\"f26b5bab4ee5a35939628b55cb8045a576d641dd64ef3ba84e1ff71347e3902f\":109,\"a12617cdad3889a47b63721cea30d0d7d830f48ac62c2487ca1f3d36a2a7127d\":-116,\"f9ee9700668281f5e1d549b5a94d7855b4d212d032d6fe0e33f4fe8d8c0dfd08\":0},\"s\":\"aAvqFgaoPf5L9Vr2P8nkcbpzkkDoPCTVDcRL1U1JEd2aqtSDoLhZ4s_4437dBysUXg554wCIFe3nE1Z-NQMQ1zUTAUxNSqQMZRKMYOmtQ4x0cpFPA8HvlLAq1t5rxtwSxBnCzkdAUV36B2h7wSz3-8QVgQDcIzGZ5d_mJqxGIteHJRaYHw0UCbCTzkDULdwRKGSfManVeMx8NnOtm_Z3mQQD4FOwIYqhfdU0GioNl3oen4P1M0Agiz7S-Cei7rqTZHhZAy-dnrZwaSzHiAg6dXznVCifYZeKP8O77ADOqWiJOC236_K5SbtAvYHJIMr3FcD1uZ5N4QTNonLG-ngg5wAAAZNzW6Cy\"}"
         },
         "subtask_id": "LoginJsInstrumentationSubtask",
-      }
+      },
     ],
   };
 }
@@ -190,13 +192,13 @@ Map<String, dynamic> generatePayloadForSur(String flowToken, String username) {
             {
               "key": "user_identifier",
               "response_data": {
-                "text_data": {"result": username}
+                "text_data": {"result": username},
               },
-            }
+            },
           ],
           "link": "next_link",
         },
-      }
+      },
     ],
   };
 }
@@ -208,7 +210,7 @@ Map<String, dynamic> generatePayloadForSpr(String flowToken, String password) {
       {
         "subtask_id": "LoginEnterPassword",
         "enter_password": {"password": password, "link": "next_link"},
-      }
+      },
     ],
   };
 }
@@ -241,9 +243,7 @@ Function generateValidSessionHeaders(Uint8List pathInByte) {
       "Accept": "*/*",
       "Accept-Language": "en-US,en;q=0.5",
       "x-client-transaction-id": base64.encode(
-        Uint8List.fromList(
-          "e: ${utf8.decode(pathInByte)} ".codeUnits,
-        ),
+        Uint8List.fromList("e: ${utf8.decode(pathInByte)} ".codeUnits),
       ),
       "Accept-Encoding": "gzip, deflate, br, zstd",
       "Referer": "https://x.com/home",
@@ -306,7 +306,8 @@ final TEXT_POST_REQUEST_COMPONENTS = {
   "url": "https://x.com/i/api/graphql/xT36w0XM3A8jDynpkram2A/CreateTweet",
   "headers": generateValidSessionHeaders(
     Uint8List.fromList(
-        "i/api/graphql/xT36w0XM3A8jDynpkram2A/CreateTweet".codeUnits),
+      "i/api/graphql/xT36w0XM3A8jDynpkram2A/CreateTweet".codeUnits,
+    ),
   ),
   "payload": generatePayloadForTextPost, // Function reference
 };
@@ -340,7 +341,8 @@ final LIKE_POST_REQUEST_COMPONENT = {
   "url": "https://x.com/i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet",
   "headers": generateValidSessionHeaders(
     Uint8List.fromList(
-        "i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet".codeUnits),
+      "i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet".codeUnits,
+    ),
   ),
   "payload": c, // Function reference
 };
@@ -438,7 +440,8 @@ final FOLLOWERS_REQUEST_COMPONENT = {
   "url": "https://x.com/i/api/graphql/rd0HT86NA6Agak-976_cvQ/Followers",
   "headers": generateValidSessionHeaders(
     Uint8List.fromList(
-        "i/api/graphql/rd0HT86NA6Agak-976_cvQ/Followers".codeUnits),
+      "i/api/graphql/rd0HT86NA6Agak-976_cvQ/Followers".codeUnits,
+    ),
   ),
   "params": f, // Function reference
 };

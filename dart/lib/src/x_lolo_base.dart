@@ -4,11 +4,8 @@ import 'package:x_lolo/src/const/payload_and_headers.dart';
 class Cookie {
   final Map<String, String> dict;
   Cookie({required this.dict});
-  String encode() {
-    return dict!.entries
-        .map((entry) => "${entry.key}=${entry.value}")
-        .join("; ");
-  }
+  String encode() =>
+      dict.entries.map((entry) => "${entry.key}=${entry.value}").join("; ");
 
   // set dicts(Map<String, String> a) => dict = a;
 }
@@ -16,20 +13,19 @@ class Cookie {
 class Session {
   late final Cookie cookie;
   late final String guestToken;
-  Session(guestToken, cookie) {
-    this.cookie = cookie;
-    this.guestToken = guestToken;
-  }
-  Session.fromYaml(dynamic data) {
-    this.cookie = data["Cookie"];
-  }
+  Session(this.guestToken, this.cookie);
+
+  // Session.fromYaml(dynamic data) {
+  //   this.cookie = data["Cookie"];
+  // }
 }
 
 Future<Cookie?> getGuestID() async {
   try {
-    var url = Uri.parse(GET_TOK_REQUEST_COMPONENTS['url'].toString());
-    var headers = GET_TOK_REQUEST_COMPONENTS["headers"] as Map<String, String>;
-    var response = await http.get(url, headers: headers);
+    final url = Uri.parse(GET_TOK_REQUEST_COMPONENTS['url'].toString());
+    final headers =
+        GET_TOK_REQUEST_COMPONENTS["headers"] as Map<String, String>;
+    final response = await http.get(url, headers: headers);
     if (response.statusCode != 200) {
       print("Error: Status code ${response.statusCode}");
       return null;
@@ -52,11 +48,12 @@ Future<Cookie?> getGuestID() async {
 
 Future<Cookie?> getGuestToken(Cookie cookie) async {
   try {
-    var url = Uri.parse(GET_X_GUEST_TOKEN_REQUEST_COMPONENTS['url'].toString());
-    var headers =
+    final url =
+        Uri.parse(GET_X_GUEST_TOKEN_REQUEST_COMPONENTS['url'].toString());
+    final Map<String, String> headers =
         (GET_X_GUEST_TOKEN_REQUEST_COMPONENTS["headers"] as Function)(cookie);
 
-    var response = await http.get(url, headers: headers);
+    final response = await http.get(url, headers: headers);
     if (response.statusCode != 200) {
       print("Error: Status code ${response.statusCode}");
       return null;
