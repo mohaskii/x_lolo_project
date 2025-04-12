@@ -3,9 +3,9 @@ import 'dart:typed_data';
 
 import 'package:x_lolo/src/x_lolo_base.dart';
 
-const String USERS_AGENT = "linux_Firefox";
+const String userAgent = "linux_Firefox";
 
-const Map<String, String> USERS_AGENTS = {
+const Map<String, String> userAgents = {
   "linux_Firefox":
       "Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0",
   "linux_Chrome":
@@ -13,9 +13,9 @@ const Map<String, String> USERS_AGENTS = {
 };
 
 /// Components for getting the authentication token
-final GET_TOK_REQUEST_COMPONENTS = {
+final getTokRequestComponents = {
   "headers": {
-    "User-Agent": USERS_AGENTS[USERS_AGENT].toString(),
+    "User-Agent": userAgents[userAgent].toString(),
     "Accept":
         "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.5",
@@ -39,7 +39,7 @@ final GET_TOK_REQUEST_COMPONENTS = {
 
 final GET_IDS_COOKIES_REQUEST_COMPONENTS = {
   "headers": {
-    "User-Agent": USERS_AGENTS[USERS_AGENT],
+    "User-Agent": userAgents[userAgent],
     "Accept":
         "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.5",
@@ -54,61 +54,52 @@ final GET_IDS_COOKIES_REQUEST_COMPONENTS = {
     "Priority": "u=0,i",
     "Te": "trailers",
   },
-  "url":
-      (String tok) =>
-          "https://twitter.com/x/migrate?tok=$tok", // This is a function reference in the original Python code
+  "url": (String tok) =>
+      "https://twitter.com/x/migrate?tok=$tok", // This is a function reference in the original Python code
 };
 
-Map<String, String> generateXGuestTokenHeader(Cookie cookies) {
-  return {
-    "User-Agent": USERS_AGENTS[USERS_AGENT].toString(),
-    "Accept":
-        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.5",
-    "Accept-Encoding": "gzip, deflate, br, zstd",
-    "Referer": "https://twitter.com/",
-    "DNT": "1",
-    "Sec-GPC": "1",
-    "Cookie": cookies.encode(),
-    "Upgrade-Insecure-Requests": "1",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "cross-site",
-    "Priority": "u=0,i",
-    "Te": "trailers",
-  };
-}
-
-final GET_X_GUEST_TOKEN_REQUEST_COMPONENTS = {
-  "headers": generateXGuestTokenHeader, // Function reference
+final getXGuestTokenRequestComponents = {
+  "headers": (Cookie cookies) => {
+        "User-Agent": userAgents[userAgent].toString(),
+        "Accept":
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Referer": "https://twitter.com/",
+        "DNT": "1",
+        "Sec-GPC": "1",
+        "Cookie": cookies.encode(),
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "cross-site",
+        "Priority": "u=0,i",
+        "Te": "trailers",
+      }, // Function reference
   "url": "https://x.com/?mx=2",
 };
 
-Map<String, String> generateXGuestFlowHeader(String cookie, String guestToken) {
-  return {
-    "User-Agent": USERS_AGENTS[USERS_AGENT]!,
-    "Accept": "*/*",
-    "Accept-Language": "en-US,en;q=0.5",
-    "Accept-Encoding": "gzip, deflate, br, zstd",
-    "Content-Type": "application/json",
-    "Referer": "https://x.com/",
-    "X-Guest-Token": guestToken,
-    "X-Twitter-Client-Language": "en",
-    "X-Twitter-Active-User": "yes",
-    "x-client-transaction-id": "ZToxLjEvb25ib2FyZGluZy90YXNrLmpzb24=",
-    "Origin": "https://x.com",
-    "Sec-Fetch-Dest": "empty",
-    "Sec-Fetch-Mode": "cors",
-    "Sec-Fetch-Site": "same-site",
-    "Authorization":
-        "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
-    "Cookie": cookie,
-  };
-}
-
 /// Components for getting flow token
-final GET_FLOW_TOKEN_REQUEST_COMPONENTS = {
-  "headers": generateXGuestFlowHeader, // Function reference
+final getFlowTokenRequestComponents = {
+  "headers": (Cookie cookie, String guestToken) => {
+        "User-Agent": userAgents[userAgent]!.toString(),
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Content-Type": "application/json",
+        "Referer": "https://x.com/",
+        "X-Guest-Token": guestToken,
+        "X-Twitter-Client-Language": "en",
+        "X-Twitter-Active-User": "yes",
+        "x-client-transaction-id": "ZToxLjEvb25ib2FyZGluZy90YXNrLmpzb24=",
+        "Origin": "https://x.com",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-site",
+        "Authorization":
+            "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
+        "Cookie": cookie.encode(),
+      }, // Function reference
   "payload": {
     "input_flow_data": {
       "flow_context": {
@@ -216,21 +207,21 @@ Map<String, dynamic> generatePayloadForSpr(String flowToken, String password) {
 }
 
 final PASS_NEXT_LINK_REQUEST_COMPONENTS = {
-  "headers": GET_FLOW_TOKEN_REQUEST_COMPONENTS["headers"],
+  "headers": getFlowTokenRequestComponents["headers"],
   "url": "https://api.x.com/1.1/onboarding/task.json",
   "payload": generatePayloadForPnlr, // Function reference
 };
 
 /// Components for Submit Username Request
 final SUBMIT_USERNAME_REQUEST_COMPONENTS = {
-  "headers": GET_FLOW_TOKEN_REQUEST_COMPONENTS["headers"],
+  "headers": getFlowTokenRequestComponents["headers"],
   "url": "https://api.x.com/1.1/onboarding/task.json",
   "payload": generatePayloadForSur, // Function reference
 };
 
 /// Components for Submit Password Request
 final SUBMIT_PASSWORD_REQUEST_COMPONENTS = {
-  "headers": GET_FLOW_TOKEN_REQUEST_COMPONENTS["headers"],
+  "headers": getFlowTokenRequestComponents["headers"],
   "url": "https://api.x.com/1.1/onboarding/task.json",
   "payload": generatePayloadForSpr, // Function reference
 };
@@ -239,7 +230,7 @@ final SUBMIT_PASSWORD_REQUEST_COMPONENTS = {
 Function generateValidSessionHeaders(Uint8List pathInByte) {
   return (Session sess) {
     return {
-      "User-Agent": USERS_AGENTS[USERS_AGENT]!,
+      "User-Agent": userAgents[userAgent]!,
       "Accept": "*/*",
       "Accept-Language": "en-US,en;q=0.5",
       "x-client-transaction-id": base64.encode(
