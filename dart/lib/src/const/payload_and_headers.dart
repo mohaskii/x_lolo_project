@@ -156,20 +156,6 @@ final getFlowTokenRequestComponents = {
 };
 
 /// Generate payload for Pass Next Link Request
-Map<String, dynamic> generatePayloadForPnlr(String flowToken) {
-  return {
-    "flow_token": "${flowToken}0",
-    "subtask_inputs": [
-      {
-        "js_instrumentation": {
-          "link": "next_link",
-          // "response": "{\"rf\":{\"aa12c0f88062b156b545f586c8d35c39fd4b29040e412f6bf073aacebf457ff4\":105,\"f26b5bab4ee5a35939628b55cb8045a576d641dd64ef3ba84e1ff71347e3902f\":109,\"a12617cdad3889a47b63721cea30d0d7d830f48ac62c2487ca1f3d36a2a7127d\":-116,\"f9ee9700668281f5e1d549b5a94d7855b4d212d032d6fe0e33f4fe8d8c0dfd08\":0},\"s\":\"aAvqFgaoPf5L9Vr2P8nkcbpzkkDoPCTVDcRL1U1JEd2aqtSDoLhZ4s_4437dBysUXg554wCIFe3nE1Z-NQMQ1zUTAUxNSqQMZRKMYOmtQ4x0cpFPA8HvlLAq1t5rxtwSxBnCzkdAUV36B2h7wSz3-8QVgQDcIzGZ5d_mJqxGIteHJRaYHw0UCbCTzkDULdwRKGSfManVeMx8NnOtm_Z3mQQD4FOwIYqhfdU0GioNl3oen4P1M0Agiz7S-Cei7rqTZHhZAy-dnrZwaSzHiAg6dXznVCifYZeKP8O77ADOqWiJOC236_K5SbtAvYHJIMr3FcD1uZ5N4QTNonLG-ngg5wAAAZNzW6Cy\"}"
-        },
-        "subtask_id": "LoginJsInstrumentationSubtask",
-      },
-    ],
-  };
-}
 
 /// Generate payload for Submit Username Request
 Map<String, dynamic> generatePayloadForSur(String flowToken, String username) {
@@ -206,10 +192,21 @@ Map<String, dynamic> generatePayloadForSpr(String flowToken, String password) {
   };
 }
 
-final PASS_NEXT_LINK_REQUEST_COMPONENTS = {
+final passNextLinkRequestComponents = {
   "headers": getFlowTokenRequestComponents["headers"],
   "url": "https://api.x.com/1.1/onboarding/task.json",
-  "payload": generatePayloadForPnlr, // Function reference
+  "payload": (String flowToken) => {
+        "flow_token": "${flowToken}0",
+        "subtask_inputs": [
+          {
+            "js_instrumentation": {
+              "link": "next_link",
+              // "response": "{\"rf\":{\"aa12c0f88062b156b545f586c8d35c39fd4b29040e412f6bf073aacebf457ff4\":105,\"f26b5bab4ee5a35939628b55cb8045a576d641dd64ef3ba84e1ff71347e3902f\":109,\"a12617cdad3889a47b63721cea30d0d7d830f48ac62c2487ca1f3d36a2a7127d\":-116,\"f9ee9700668281f5e1d549b5a94d7855b4d212d032d6fe0e33f4fe8d8c0dfd08\":0},\"s\":\"aAvqFgaoPf5L9Vr2P8nkcbpzkkDoPCTVDcRL1U1JEd2aqtSDoLhZ4s_4437dBysUXg554wCIFe3nE1Z-NQMQ1zUTAUxNSqQMZRKMYOmtQ4x0cpFPA8HvlLAq1t5rxtwSxBnCzkdAUV36B2h7wSz3-8QVgQDcIzGZ5d_mJqxGIteHJRaYHw0UCbCTzkDULdwRKGSfManVeMx8NnOtm_Z3mQQD4FOwIYqhfdU0GioNl3oen4P1M0Agiz7S-Cei7rqTZHhZAy-dnrZwaSzHiAg6dXznVCifYZeKP8O77ADOqWiJOC236_K5SbtAvYHJIMr3FcD1uZ5N4QTNonLG-ngg5wAAAZNzW6Cy\"}"
+            },
+            "subtask_id": "LoginJsInstrumentationSubtask",
+          },
+        ],
+      },
 };
 
 /// Components for Submit Username Request

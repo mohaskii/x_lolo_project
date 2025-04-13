@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:http/http.dart' as http;
 import 'package:x_lolo/src/const/payload_and_headers.dart';
 import 'package:html/parser.dart' show parse;
@@ -29,6 +27,7 @@ class Session {
     final data = await getAuthFlows(cookie, guestToken);
     cookie.dict["att"] = data.attCookie;
     flowToken = data.flowToken;
+    passNextLink(this);
   }
 }
 
@@ -172,6 +171,19 @@ Future<({String flowToken, String attCookie})> getAuthFlows(
     flowToken: flowToken.substring(0, flowToken.length - 1),
     attCookie: getAtt(response.headers["set-cookie"]!)
   );
+}
+
+Future<void> passNextLink(Session sess) async {
+  final response = await http.post(
+      Uri.parse(passNextLinkRequestComponents['url'] as String),
+      headers: (passNextLinkRequestComponents['headers'] as Function)(
+          sess.cookie, sess.guestToken),
+      body: jsonEncode((passNextLinkRequestComponents['payload']
+          as Function)(sess.flowToken)));
+  if (response.statusCode != 200) {
+    throw Exception(
+        'Failed to pass next link. Status code: ${response.statusCode}');
+  }
 }
 
 void main() async {
