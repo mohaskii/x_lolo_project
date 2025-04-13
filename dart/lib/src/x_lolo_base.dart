@@ -229,9 +229,9 @@ Future<void> submitPassword(Session sess, String password) async {
   }
 
   final cookies = getCookies(response.headers["set-cookie"]!);
-  print(cookies);
+
   sess.cookie.dict["authToken"] = cookies["auth_token"]!;
   sess.cookie.dict["ct0"] = cookies["ct0"]!;
-  sess.userID = cookies["twid"]!.substring(0, cookies["twid"]!.length - 2);
+  sess.userID = cookies["twid"]!.replaceAll('"u=', '').replaceAll('"', "");
   sess.xCsrfToken = cookies["ct0"]!;
 }
