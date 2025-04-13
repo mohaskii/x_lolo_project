@@ -15,7 +15,8 @@ class Session {
   late final Cookie cookie;
   late final String guestToken;
   late final String flowToken;
-
+  late final String xCsrfToken;
+  late final String userID;
   // Make the constructor async
   Future<void> initialize() async {
     cookie = (await getGuestIDandCookies());
@@ -106,28 +107,38 @@ Future<String> getGuestToken(Cookie cookie) async {
   return throw Exception('Unable to get cookie. Invalid cookie part: $part');
 }
 
-String getAtt(String cookieString) {
+Map<String, String> getCookies(String cookieString) {
+  final Map<String, String> cookies = {};
   final List<String> parts = cookieString.split('; ');
 
   for (String part in parts) {
-    // Split each part by '='
     if (part.toLowerCase().startsWith("expires")) {
+      final cookie = getCookie(part);
+      cookies[cookie.$1] = cookie.$2;
       continue;
     }
     final int equalsIndex = part.indexOf('=');
-    if (equalsIndex == -1) continue;
-
-    String value = part.substring(equalsIndex + 1);
-    final subCookies = value.split(',');
-    if (subCookies.length == 1) {
+    if (equalsIndex == -1) {
       continue;
     }
-    subCookies.removeAt(0);
-    final cookie = getCookie(subCookies[0]);
-    if (cookie.$1 == "att") return cookie.$2;
+
+    final subCookies = part.split(',');
+    if (subCookies.length == 1) {
+      final cookie = getCookie(part);
+      cookies[cookie.$1] = cookie.$2;
+      continue;
+    }
+
+    if (subCookies[0].contains('=')) {
+      final cookie = getCookie(subCookies[0]);
+      cookies[cookie.$1] = cookie.$2;
+    }
+
+    final cookie = getCookie(subCookies[1]);
+    cookies[cookie.$1] = cookie.$2;
   }
-  throw Exception(
-      'Unable to find "att" cookie in the response. Cookie string: $cookieString');
+
+  return cookies;
 }
 
 Map<String, String> extractCookiesTrim(String cookieString) {
@@ -158,7 +169,6 @@ Map<String, String> extractCookiesTrim(String cookieString) {
 
 Future<({String flowToken, String attCookie})> getAuthFlows(
     Cookie cookie, String guestToken) async {
-  // print("${guestToken}...${cookie.encode()}");
   final response = await http.post(
       Uri.parse(getFlowTokenRequestComponents["url"] as String),
       headers: (getFlowTokenRequestComponents["headers"] as Function)(
@@ -174,7 +184,7 @@ Future<({String flowToken, String attCookie})> getAuthFlows(
 
   return (
     flowToken: flowToken.substring(0, flowToken.length - 1),
-    attCookie: getAtt(response.headers["set-cookie"]!)
+    attCookie: getCookies(response.headers["set-cookie"]!)['att']!
   );
 }
 
@@ -218,9 +228,10 @@ Future<void> submitPassword(Session sess, String password) async {
         'Failed to submit password. Status code: ${response.statusCode}. Response body: ${response.body}');
   }
 
-  final cookie = extractCookiesTrim(response.headers["set-cookie"]!);
-
-  print(cookie);
+  final cookies = getCookies(response.headers["set-cookie"]!);
+  print(cookies);
+  sess.cookie.dict["authToken"] = cookies["auth_token"]!;
+  sess.cookie.dict["ct0"] = cookies["ct0"]!;
+  sess.userID = cookies["twid"]!.substring(0, cookies["twid"]!.length - 2);
+  sess.xCsrfToken = cookies["ct0"]!;
 }
-
-
