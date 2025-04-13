@@ -27,7 +27,10 @@ class Session {
     final data = await getAuthFlows(cookie, guestToken);
     cookie.dict["att"] = data.attCookie;
     flowToken = data.flowToken;
-    passNextLink(this);
+
+    await passNextLink(this);
+    await submitUsername(this, usernameOrEmail);
+    await submitPassword(this, passWord);
   }
 }
 
@@ -38,12 +41,13 @@ Future<Cookie> getGuestIDandCookies() async {
 
   if (response.statusCode != 200) {
     throw Exception(
-        'Failed to get guest ID. Status code: ${response.statusCode}');
+        'Failed to get guest ID. Status code: ${response.statusCode}. Response body: ${response.body}');
   }
   // Extract cookies from response headers
   final String? cookies = response.headers['set-cookie'];
   if (cookies == null || cookies.isEmpty) {
-    throw Exception('No cookies found in response');
+    throw Exception(
+        'No cookies found in response. Response headers: ${response.headers}');
   }
   return Cookie(dict: extractCookiesTrim(cookies));
 }
@@ -81,7 +85,7 @@ Future<String> getGuestToken(Cookie cookie) async {
           (getXGuestTokenRequestComponents["headers"] as Function)(cookie));
   if (response.statusCode != 200) {
     throw Exception(
-        'Failed to get guest token. Status code: ${response.statusCode}');
+        'Failed to get guest token. Status code: ${response.statusCode}. Response body: ${response.body}');
   }
 
   return retrieveXGuestTokenValue(response.body);
@@ -99,7 +103,7 @@ Future<String> getGuestToken(Cookie cookie) async {
     }
     return (key, value);
   }
-  return throw Exception('Unable to get cookie');
+  return throw Exception('Unable to get cookie. Invalid cookie part: $part');
 }
 
 String getAtt(String cookieString) {
@@ -122,7 +126,8 @@ String getAtt(String cookieString) {
     final cookie = getCookie(subCookies[0]);
     if (cookie.$1 == "att") return cookie.$2;
   }
-  throw Exception('Unable to find "att" cookie in the response');
+  throw Exception(
+      'Unable to find "att" cookie in the response. Cookie string: $cookieString');
 }
 
 Map<String, String> extractCookiesTrim(String cookieString) {
@@ -162,7 +167,7 @@ Future<({String flowToken, String attCookie})> getAuthFlows(
 
   if (response.statusCode != 200) {
     throw Exception(
-        'Failed to get auth flows. Status code: ${response.statusCode}');
+        'Failed to get auth flows. Status code: ${response.statusCode}. Response body: ${response.body}');
   }
   final Map<String, dynamic> responseJson = jsonDecode(response.body);
   final String flowToken = responseJson["flow_token"];
@@ -182,14 +187,40 @@ Future<void> passNextLink(Session sess) async {
           as Function)(sess.flowToken)));
   if (response.statusCode != 200) {
     throw Exception(
-        'Failed to pass next link. Status code: ${response.statusCode}');
+        'Failed to pass next link. Status code: ${response.statusCode}. Response body: ${response.body}');
   }
 }
 
-void main() async {
-  final session = Session();
-  await session.initialize();
-  await session.login('', '', false);
-  print(session.flowToken);
-  print(session.cookie);
+Future<void> submitUsername(Session sess, String username) async {
+  final response = await http.post(
+      Uri.parse(submitUsernameRequestComponents['url'] as String),
+      headers: (submitUsernameRequestComponents['headers'] as Function)(
+          sess.cookie, sess.guestToken),
+      body: jsonEncode((submitUsernameRequestComponents['payload'] as Function)(
+          sess.flowToken, username)));
+
+  if (response.statusCode != 200) {
+    throw Exception(
+        'Failed to submit username. Status code: ${response.statusCode}. Response body: ${response.body}');
+  }
 }
+
+Future<void> submitPassword(Session sess, String password) async {
+  final response = await http.post(
+      Uri.parse(submitPasswordRequestComponents['url'] as String),
+      headers: (submitPasswordRequestComponents['headers'] as Function)(
+          sess.cookie, sess.guestToken),
+      body: jsonEncode((submitPasswordRequestComponents['payload'] as Function)(
+          sess.flowToken, password)));
+
+  if (response.statusCode != 200) {
+    throw Exception(
+        'Failed to submit password. Status code: ${response.statusCode}. Response body: ${response.body}');
+  }
+
+  final cookie = extractCookiesTrim(response.headers["set-cookie"]!);
+
+  print(cookie);
+}
+
+

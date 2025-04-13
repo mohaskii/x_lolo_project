@@ -158,39 +158,6 @@ final getFlowTokenRequestComponents = {
 /// Generate payload for Pass Next Link Request
 
 /// Generate payload for Submit Username Request
-Map<String, dynamic> generatePayloadForSur(String flowToken, String username) {
-  return {
-    "flow_token": "${flowToken}1",
-    "subtask_inputs": [
-      {
-        "subtask_id": "LoginEnterUserIdentifierSSO",
-        "settings_list": {
-          "setting_responses": [
-            {
-              "key": "user_identifier",
-              "response_data": {
-                "text_data": {"result": username},
-              },
-            },
-          ],
-          "link": "next_link",
-        },
-      },
-    ],
-  };
-}
-
-Map<String, dynamic> generatePayloadForSpr(String flowToken, String password) {
-  return {
-    "flow_token": "${flowToken}7",
-    "subtask_inputs": [
-      {
-        "subtask_id": "LoginEnterPassword",
-        "enter_password": {"password": password, "link": "next_link"},
-      },
-    ],
-  };
-}
 
 final passNextLinkRequestComponents = {
   "headers": getFlowTokenRequestComponents["headers"],
@@ -210,17 +177,43 @@ final passNextLinkRequestComponents = {
 };
 
 /// Components for Submit Username Request
-final SUBMIT_USERNAME_REQUEST_COMPONENTS = {
+final submitUsernameRequestComponents = {
   "headers": getFlowTokenRequestComponents["headers"],
   "url": "https://api.x.com/1.1/onboarding/task.json",
-  "payload": generatePayloadForSur, // Function reference
+  "payload": (String flowToken, String username) => {
+        "flow_token": "${flowToken}1",
+        "subtask_inputs": [
+          {
+            "subtask_id": "LoginEnterUserIdentifierSSO",
+            "settings_list": {
+              "setting_responses": [
+                {
+                  "key": "user_identifier",
+                  "response_data": {
+                    "text_data": {"result": username},
+                  },
+                },
+              ],
+              "link": "next_link",
+            },
+          },
+        ],
+      }, // Function reference
 };
 
 /// Components for Submit Password Request
-final SUBMIT_PASSWORD_REQUEST_COMPONENTS = {
+final submitPasswordRequestComponents = {
   "headers": getFlowTokenRequestComponents["headers"],
   "url": "https://api.x.com/1.1/onboarding/task.json",
-  "payload": generatePayloadForSpr, // Function reference
+  "payload": (String flowToken, String password) => {
+        "flow_token": "${flowToken}7",
+        "subtask_inputs": [
+          {
+            "subtask_id": "LoginEnterPassword",
+            "enter_password": {"password": password, "link": "next_link"},
+          },
+        ],
+      }, // Function reference
 };
 
 /// Generate valid session headers
