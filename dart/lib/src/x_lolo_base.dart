@@ -25,9 +25,10 @@ class Session {
   }
 
   Future<void> login(
-      String usernameOrEmail, String passWord, Bool saveSession) async {
+      String usernameOrEmail, String passWord, bool saveSession) async {
     final data = await getAuthFlows(cookie, guestToken);
-    
+    cookie.dict["att"] = data.attCookie;
+    flowToken = data.flowToken;
   }
 }
 
@@ -87,6 +88,44 @@ Future<String> getGuestToken(Cookie cookie) async {
   return retrieveXGuestTokenValue(response.body);
 }
 
+(String, String) getCookie(String part) {
+  final int equalsIndex = part.indexOf('=');
+  if (equalsIndex > 0) {
+    final String key = part.substring(0, equalsIndex);
+    String value = part.substring(equalsIndex + 1);
+
+    // Similar to the Python lstrip("v1%3A")
+    if (value.startsWith("v1%3A")) {
+      value = value.substring(5); // Remove "v1%3A" prefix
+    }
+    return (key, value);
+  }
+  return throw Exception('Unable to get cookie');
+}
+
+String getAtt(String cookieString) {
+  final List<String> parts = cookieString.split('; ');
+
+  for (String part in parts) {
+    // Split each part by '='
+    if (part.toLowerCase().startsWith("expires")) {
+      continue;
+    }
+    final int equalsIndex = part.indexOf('=');
+    if (equalsIndex == -1) continue;
+
+    String value = part.substring(equalsIndex + 1);
+    final subCookies = value.split(',');
+    if (subCookies.length == 1) {
+      continue;
+    }
+    subCookies.removeAt(0);
+    final cookie = getCookie(subCookies[0]);
+    if (cookie.$1 == "att") return cookie.$2;
+  }
+  throw Exception('Unable to find "att" cookie in the response');
+}
+
 Map<String, String> extractCookiesTrim(String cookieString) {
   // Parse the cookie string
   final Map<String, String> cookiesToReturn = {};
@@ -113,7 +152,8 @@ Map<String, String> extractCookiesTrim(String cookieString) {
   return cookiesToReturn;
 }
 
-Future<({String flowToken, String attCookie })> getAuthFlows(Cookie cookie, String guestToken) async {
+Future<({String flowToken, String attCookie})> getAuthFlows(
+    Cookie cookie, String guestToken) async {
   // print("${guestToken}...${cookie.encode()}");
   final response = await http.post(
       Uri.parse(getFlowTokenRequestComponents["url"] as String),
@@ -127,13 +167,17 @@ Future<({String flowToken, String attCookie })> getAuthFlows(Cookie cookie, Stri
   }
   final Map<String, dynamic> responseJson = jsonDecode(response.body);
   final String flowToken = responseJson["flow_token"];
-  final String attCookie =
-      extractCookiesTrim(response.headers["set-cookie"]!)["att"]!;
-  return (flowToken :flowToken , attCookie:attCookie );
+
+  return (
+    flowToken: flowToken.substring(0, flowToken.length - 1),
+    attCookie: getAtt(response.headers["set-cookie"]!)
+  );
 }
 
 void main() async {
   final session = Session();
   await session.initialize();
-  getAuthFlows(session.cookie, session.guestToken);
+  await session.login('', '', false);
+  print(session.flowToken);
+  print(session.cookie);
 }
