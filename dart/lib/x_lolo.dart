@@ -3,6 +3,6 @@
 /// More dartdocs go here.
 library;
 
-export 'src/x_lolo_base.dart';
+export 'src/session.dart' show Session ;
 
 // TODO: Export any libraries intended for clients of this package.

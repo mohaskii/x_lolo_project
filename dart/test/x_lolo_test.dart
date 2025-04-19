@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
-import 'package:x_lolo/src/x_lolo_base.dart';
-
+import 'package:x_lolo/src/session.dart';
+  
 void main() {
   group('Cookie and Token Tests', () {
     test('getGuestIDandCookies returns a Cookie object', () async {

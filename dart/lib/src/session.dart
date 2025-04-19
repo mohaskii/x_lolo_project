@@ -3,6 +3,7 @@ import 'package:x_lolo/src/const/payload_and_headers.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
 import 'dart:convert';
+import 'package:x_lolo/src/post.dart';
 
 class Cookie {
   final Map<String, String> dict;
@@ -12,14 +13,17 @@ class Cookie {
 }
 
 class Session {
-  late final Cookie cookie;
-  late final String guestToken;
-  late final String flowToken;
-  late final String xCsrfToken;
-  late final String userID;
+  late Cookie cookie;
+  late String guestToken;
+  late String flowToken;
+  late String xCsrfToken;
+  late String userID;
+  late String expire;
   // Make the constructor async
   Future<void> initialize() async {
-    cookie = (await getGuestIDandCookies());
+    final data = await getGuestIDandCookies();
+    cookie = Cookie(dict: data.cookies);
+    expire = data.expires;
     guestToken = (await getGuestToken(cookie));
   }
 
@@ -33,9 +37,26 @@ class Session {
     await submitUsername(this, usernameOrEmail);
     await submitPassword(this, passWord);
   }
+
+  Future<Post> addPost(String text, {String? mediaUrl = null}) async {
+    // print(jsonEncode((textPostRequestComponents['payload'] as Function)(text)));§
+    final response = await http.post(
+        Uri.parse(textPostRequestComponents['url'] as String),
+        headers: (textPostRequestComponents['headers'] as Function)(this),
+        body: jsonEncode(
+            (textPostRequestComponents['payload'] as Function)(text)));
+
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Failed to add post. Status code: ${response.statusCode}. Response body: ${response.body}');
+    }
+
+    return Post();
+  }
 }
 
-Future<Cookie> getGuestIDandCookies() async {
+Future<({Map<String, String> cookies, String expires})>
+    getGuestIDandCookies() async {
   final response = await http.get(
       Uri.parse(getTokRequestComponents['url'].toString()),
       headers: getTokRequestComponents["headers"] as Map<String, String>);
@@ -50,7 +71,7 @@ Future<Cookie> getGuestIDandCookies() async {
     throw Exception(
         'No cookies found in response. Response headers: ${response.headers}');
   }
-  return Cookie(dict: extractCookiesTrim(cookies));
+  return getCookies(cookies);
 }
 
 String retrieveXGuestTokenValue(String htmlDoc) {
@@ -104,17 +125,27 @@ Future<String> getGuestToken(Cookie cookie) async {
     }
     return (key, value);
   }
+
   return throw Exception('Unable to get cookie. Invalid cookie part: $part');
 }
 
-Map<String, String> getCookies(String cookieString) {
+({Map<String, String> cookies, String expires}) getCookies(
+    String cookieString) {
   final Map<String, String> cookies = {};
+  String? expires;
   final List<String> parts = cookieString.split('; ');
-
+  final toIgnore = [
+    "max-age",
+    "expires",
+    "path",
+    "domain",
+    "samesite",
+  ];
   for (String part in parts) {
     if (part.toLowerCase().startsWith("expires")) {
       final cookie = getCookie(part);
-      cookies[cookie.$1] = cookie.$2;
+      expires = cookie.$2;
+
       continue;
     }
     final int equalsIndex = part.indexOf('=');
@@ -125,7 +156,12 @@ Map<String, String> getCookies(String cookieString) {
     final subCookies = part.split(',');
     if (subCookies.length == 1) {
       final cookie = getCookie(part);
+
+      if (toIgnore.contains(cookie.$1.toLowerCase()) || cookie.$2.isEmpty) {
+        continue;
+      }
       cookies[cookie.$1] = cookie.$2;
+
       continue;
     }
 
@@ -135,10 +171,13 @@ Map<String, String> getCookies(String cookieString) {
     }
 
     final cookie = getCookie(subCookies[1]);
+    if (toIgnore.contains(cookie.$1.toLowerCase()) || cookie.$2.isEmpty) {
+      continue;
+    }
     cookies[cookie.$1] = cookie.$2;
   }
 
-  return cookies;
+  return (cookies: cookies, expires: expires!);
 }
 
 Map<String, String> extractCookiesTrim(String cookieString) {
@@ -184,7 +223,7 @@ Future<({String flowToken, String attCookie})> getAuthFlows(
 
   return (
     flowToken: flowToken.substring(0, flowToken.length - 1),
-    attCookie: getCookies(response.headers["set-cookie"]!)['att']!
+    attCookie: getCookies(response.headers["set-cookie"]!).cookies['att']!
   );
 }
 
@@ -195,6 +234,7 @@ Future<void> passNextLink(Session sess) async {
           sess.cookie, sess.guestToken),
       body: jsonEncode((passNextLinkRequestComponents['payload']
           as Function)(sess.flowToken)));
+
   if (response.statusCode != 200) {
     throw Exception(
         'Failed to pass next link. Status code: ${response.statusCode}. Response body: ${response.body}');
@@ -228,9 +268,9 @@ Future<void> submitPassword(Session sess, String password) async {
         'Failed to submit password. Status code: ${response.statusCode}. Response body: ${response.body}');
   }
 
-  final cookies = getCookies(response.headers["set-cookie"]!);
+  final cookies = getCookies(response.headers["set-cookie"]!).cookies;
 
-  sess.cookie.dict["authToken"] = cookies["auth_token"]!;
+  sess.cookie.dict["auth_token"] = cookies["auth_token"]!;
   sess.cookie.dict["ct0"] = cookies["ct0"]!;
   sess.userID = cookies["twid"]!.replaceAll('"u=', '').replaceAll('"', "");
   sess.xCsrfToken = cookies["ct0"]!;

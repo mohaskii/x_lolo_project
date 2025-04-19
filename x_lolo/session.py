@@ -51,7 +51,10 @@ class Session:
         :param password: The password
         :param save_session_to: Path to save the session to (optional)
         """
+        print(f"before {self.cookies.encode()}")
         flow_token, att_cookie = auth_flows.get(self.cookies, self.x_guest_token)
+        print(f"after  {self.cookies.encode()}")
+
         self.flow_token = flow_token
         self.cookies.dict["att"] = att_cookie
         self.user_id = ""
@@ -306,7 +309,6 @@ class Session:
         result: list[User] = []
         follower_paginator = FollowerPaginator(self, response, username)
         while pagination_count:
-
             result.extend(follower_paginator.followers)
             pagination_count -= 1
             if pagination_count:

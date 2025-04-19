@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:x_lolo/src/x_lolo_base.dart';
+import 'package:x_lolo/src/session.dart';
 
 const String userAgent = "linux_Firefox";
 
@@ -217,15 +217,12 @@ final submitPasswordRequestComponents = {
 };
 
 /// Generate valid session headers
-Function generateValidSessionHeaders(Uint8List pathInByte) {
-  return (Session sess) {
-    return {
+Function generateValidSessionHeaders(String path) => (Session sess) => {
       "User-Agent": userAgents[userAgent]!,
       "Accept": "*/*",
       "Accept-Language": "en-US,en;q=0.5",
-      "x-client-transaction-id": base64.encode(
-        Uint8List.fromList("e: ${utf8.decode(pathInByte)} ".codeUnits),
-      ),
+      "Content-Type": "application/json",
+      "x-client-transaction-id": base64.encode(utf8.encode("e: b'$path' ")),
       "Accept-Encoding": "gzip, deflate, br, zstd",
       "Referer": "https://x.com/home",
       "X-Twitter-Auth-Type": "OAuth2Session",
@@ -238,59 +235,51 @@ Function generateValidSessionHeaders(Uint8List pathInByte) {
       "Sec-Fetch-Site": "same-origin",
       "Authorization":
           "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
-      "Cookie": sess.cookies,
+      "Cookie": sess.cookie.encode(),
       "TE": "trailers",
     };
-  };
-}
 
 /// Generate payload for text post
-Map<String, dynamic> generatePayloadForTextPost(String text) {
-  return {
-    "variables": {
-      "tweet_text": text,
-      "dark_request": false,
-      "media": {"media_entities": [], "possibly_sensitive": false},
-      "semantic_annotation_ids": [],
-      "disallowed_reply_options": null,
-    },
-    "features": {
-      "communities_web_enable_tweet_community_results_fetch": true,
-      "c9s_tweet_anatomy_moderator_badge_enabled": true,
-      "responsive_web_edit_tweet_api_enabled": true,
-      "graphql_is_translatable_rweb_tweet_is_translatable_enabled": true,
-      "view_counts_everywhere_api_enabled": true,
-      "longform_notetweets_consumption_enabled": true,
-      "responsive_web_twitter_article_tweet_consumption_enabled": true,
-      "tweet_awards_web_tipping_enabled": false,
-      "creator_subscriptions_quote_tweet_preview_enabled": false,
-      "longform_notetweets_rich_text_read_enabled": true,
-      "longform_notetweets_inline_media_enabled": true,
-      "articles_preview_enabled": true,
-      "rweb_video_timestamps_enabled": true,
-      "rweb_tipjar_consumption_enabled": true,
-      "responsive_web_graphql_exclude_directive_enabled": true,
-      "verified_phone_label_enabled": false,
-      "freedom_of_speech_not_reach_fetch_enabled": true,
-      "standardized_nudges_misinfo": true,
-      "tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":
-          true,
-      "responsive_web_graphql_skip_user_profile_image_extensions_enabled":
-          false,
-      "responsive_web_graphql_timeline_navigation_enabled": true,
-      "responsive_web_enhance_cards_enabled": false,
-    },
-  };
-}
 
-final TEXT_POST_REQUEST_COMPONENTS = {
+final textPostRequestComponents = {
   "url": "https://x.com/i/api/graphql/xT36w0XM3A8jDynpkram2A/CreateTweet",
   "headers": generateValidSessionHeaders(
-    Uint8List.fromList(
-      "i/api/graphql/xT36w0XM3A8jDynpkram2A/CreateTweet".codeUnits,
-    ),
-  ),
-  "payload": generatePayloadForTextPost, // Function reference
+      "i/api/graphql/xT36w0XM3A8jDynpkram2A/CreateTweet"),
+  "payload": (String text) => {
+        "variables": {
+          "tweet_text": text,
+          "dark_request": false,
+          "media": {"media_entities": [], "possibly_sensitive": false},
+          "semantic_annotation_ids": [],
+          "disallowed_reply_options": null,
+        },
+        "features": {
+          "communities_web_enable_tweet_community_results_fetch": true,
+          "c9s_tweet_anatomy_moderator_badge_enabled": true,
+          "responsive_web_edit_tweet_api_enabled": true,
+          "graphql_is_translatable_rweb_tweet_is_translatable_enabled": true,
+          "view_counts_everywhere_api_enabled": true,
+          "longform_notetweets_consumption_enabled": true,
+          "responsive_web_twitter_article_tweet_consumption_enabled": true,
+          "tweet_awards_web_tipping_enabled": false,
+          "creator_subscriptions_quote_tweet_preview_enabled": false,
+          "longform_notetweets_rich_text_read_enabled": true,
+          "longform_notetweets_inline_media_enabled": true,
+          "articles_preview_enabled": true,
+          "rweb_video_timestamps_enabled": true,
+          "rweb_tipjar_consumption_enabled": true,
+          "responsive_web_graphql_exclude_directive_enabled": true,
+          "verified_phone_label_enabled": false,
+          "freedom_of_speech_not_reach_fetch_enabled": true,
+          "standardized_nudges_misinfo": true,
+          "tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":
+              true,
+          "responsive_web_graphql_skip_user_profile_image_extensions_enabled":
+              false,
+          "responsive_web_graphql_timeline_navigation_enabled": true,
+          "responsive_web_enhance_cards_enabled": false,
+        },
+      }, // Function reference
 };
 
 Map<String, dynamic> c(String postId) {
@@ -321,25 +310,20 @@ Map<String, dynamic> d(String userId) {
 final LIKE_POST_REQUEST_COMPONENT = {
   "url": "https://x.com/i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet",
   "headers": generateValidSessionHeaders(
-    Uint8List.fromList(
-      "i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet".codeUnits,
-    ),
-  ),
+      "i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet"),
   "payload": c, // Function reference
 };
 
 final FOLLOW_REQUEST_COMPONENTS = {
   "url": "https://x.com/i/api/1.1/friendships/create.json",
-  "headers": generateValidSessionHeaders(
-    Uint8List.fromList("i/api/1.1/friendships/create.json".codeUnits),
-  ),
+  "headers": generateValidSessionHeaders("i/api/1.1/friendships/create.json"),
   "data": d, // Function reference
 };
 
 final UNFOLLOW_REQUEST_COMPONENTS = {
   "url": "https://x.com/i/api/1.1/friendships/destroy.json",
   "headers": generateValidSessionHeaders(
-    Uint8List.fromList("api/1.1/friendships/destroy.json".codeUnits),
+    "api/1.1/friendships/destroy.json",
   ),
   "data": d, // Function reference
 };
@@ -411,19 +395,15 @@ Map<String, String> f(String userId, String cursor) {
 
 final RECOMMENDATIONS_REQUEST_COMPONENT = {
   "url": "https://x.com/i/api/1.1/users/recommendations.json",
-  "headers": generateValidSessionHeaders(
-    Uint8List.fromList("i/api/1.1/users/recommendations.json".codeUnits),
-  ),
+  "headers":
+      generateValidSessionHeaders("i/api/1.1/users/recommendations.json"),
   "params": e, // Function reference
 };
 
 final FOLLOWERS_REQUEST_COMPONENT = {
   "url": "https://x.com/i/api/graphql/rd0HT86NA6Agak-976_cvQ/Followers",
   "headers": generateValidSessionHeaders(
-    Uint8List.fromList(
-      "i/api/graphql/rd0HT86NA6Agak-976_cvQ/Followers".codeUnits,
-    ),
-  ),
+      "i/api/graphql/rd0HT86NA6Agak-976_cvQ/Followers"),
   "params": f, // Function reference
 };
 
@@ -519,10 +499,3 @@ final GRAPHQL_QUERIES = {
     "query": b,
   },
 };
-
-class Session {
-  final String cookies;
-  final String xCsrfToken;
-
-  Session({required this.cookies, required this.xCsrfToken});
-}
